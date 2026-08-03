@@ -11,55 +11,35 @@ import {
   CheckCircle2,
   Clock,
   DollarSign,
+  Edit2,
+  Trash2,
+  ShieldCheck,
 } from 'lucide-react';
-import { StockMovement, WorkSite } from '../types';
+import { StockMovement, WorkSite, isGlobalWorksiteRole } from '../types';
+import type { User } from '../types';
 
 interface WorksitesViewProps {
   worksites: WorkSite[];
   movements: StockMovement[];
-  onAddWorksite: (worksite: Omit<WorkSite, 'id' | 'totalSpentMaterials'>) => void;
+  currentUser?: User | null;
+  onOpenNewWorksite: () => void;
+  onEditWorksite: (worksite: WorkSite) => void;
+  onDeleteWorksite: (id: string) => void;
   onOpenQuickMovement: () => void;
 }
 
 export const WorksitesView: React.FC<WorksitesViewProps> = ({
   worksites,
   movements,
-  onAddWorksite,
+  currentUser,
+  onOpenNewWorksite,
+  onEditWorksite,
+  onDeleteWorksite,
   onOpenQuickMovement,
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWorksiteId, setSelectedWorksiteId] = useState<string | null>(null);
 
-  // New Worksite Form State
-  const [code, setCode] = useState(`OBR-${Math.floor(100 + Math.random() * 900)}`);
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [engineerInCharge, setEngineerInCharge] = useState('');
-  const [budgetMaterials, setBudgetMaterials] = useState('');
-  const [status, setStatus] = useState<'Em Andamento' | 'Planejamento' | 'Concluída'>('Em Andamento');
-
-  const handleSubmitNewWorksite = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-
-    onAddWorksite({
-      code: code || 'OBR-000',
-      name: name.trim(),
-      address: address.trim() || 'Canteiro Principal',
-      engineerInCharge: engineerInCharge.trim() || 'Engenheiro Responsável',
-      status,
-      budgetMaterials: parseFloat(budgetMaterials) || 100000,
-      startDate: new Date().toISOString().slice(0, 10),
-    });
-
-    // Reset
-    setName('');
-    setAddress('');
-    setEngineerInCharge('');
-    setBudgetMaterials('');
-    setIsModalOpen(false);
-  };
-
+  const isGlobalUser = isGlobalWorksiteRole(currentUser?.role);
   const selectedWorksite = worksites.find((w) => w.id === selectedWorksiteId);
 
   // Filter movements for selected worksite
@@ -69,6 +49,22 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Global Access Role Banner */}
+      {isGlobalUser && (
+        <div className="bg-emerald-950/40 border border-emerald-500/30 p-3.5 rounded-2xl text-emerald-300 text-xs flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div>
+              <span className="font-bold text-white">Gestão Centralizada de Obras:</span> Acesso concedido como{' '}
+              <span className="text-emerald-400 font-semibold">{currentUser?.role}</span> ({currentUser?.name}) para administrar todos os canteiros cadastrados na empresa.
+            </div>
+          </div>
+          <span className="bg-emerald-900/60 border border-emerald-500/40 font-mono text-[10px] font-bold px-2 py-1 rounded-lg shrink-0">
+            VISÃO TOTAL
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-[#0F0F11] rounded-2xl border border-[#1F1F21] p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -81,7 +77,7 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
         </div>
 
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={onOpenNewWorksite}
           className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-md active:scale-95 transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[3]" />
@@ -172,10 +168,31 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
 
               {/* Footer */}
               <div className="mt-4 pt-3 border-t border-[#1F1F21] flex items-center justify-between text-xs text-[#888888]">
-                <span>{siteMovCount} retiradas realizadas</span>
-                <span className="text-[#F2A30F] font-bold hover:underline">
-                  {selectedWorksiteId === site.id ? 'Fechar Detalhes' : 'Ver Ficha de Consumo →'}
-                </span>
+                <span>{siteMovCount} retiradas</span>
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => onEditWorksite(site)}
+                    className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
+                    title="Editar Obra"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Excluir a obra "${site.name}"?`)) {
+                        onDeleteWorksite(site.id);
+                        if (selectedWorksiteId === site.id) setSelectedWorksiteId(null);
+                      }
+                    }}
+                    className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                    title="Excluir Obra"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[#F2A30F] font-bold hover:underline ml-1 text-[11px]">
+                    {selectedWorksiteId === site.id ? 'Fechar' : 'Detalhes →'}
+                  </span>
+                </div>
               </div>
             </div>
           );
@@ -200,6 +217,23 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => onEditWorksite(selectedWorksite)}
+                className="bg-[#151517] border border-[#1F1F21] hover:bg-[#1F1F21] text-white font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Edit2 className="w-3.5 h-3.5 text-[#F2A30F]" /> Editar
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm(`Excluir a obra "${selectedWorksite.name}"?`)) {
+                    onDeleteWorksite(selectedWorksite.id);
+                    setSelectedWorksiteId(null);
+                  }
+                }}
+                className="bg-red-950/40 border border-red-500/30 hover:bg-red-900/50 text-red-400 font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Excluir
+              </button>
               <button
                 onClick={onOpenQuickMovement}
                 className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
@@ -262,113 +296,6 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
                 </table>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Modal: New Worksite */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0F0F11] rounded-2xl shadow-2xl border border-[#1F1F21] w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 text-[#E0E0E0] text-xs sm:text-sm">
-            <div className="bg-[#151517] text-white px-6 py-4 flex items-center justify-between border-b border-[#1F1F21]">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-[#F2A30F]" />
-                <h3 className="font-bold text-base">Cadastrar Nova Obra / Canteiro</h3>
-              </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-[#888888] hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmitNewWorksite} className="p-6 space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#A0A0A0] mb-1">Código do Projeto *</label>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  required
-                  className="w-full bg-[#151517] border border-[#1F1F21] rounded-lg p-2 font-mono text-xs text-white focus:border-[#F2A30F] outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#A0A0A0] mb-1">Nome da Obra / Edifício *</label>
-                <input
-                  type="text"
-                  placeholder="ex: Edifício Torre Sul - Bloco B"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="w-full bg-[#151517] border border-[#1F1F21] rounded-lg p-2 font-medium text-white focus:border-[#F2A30F] outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#A0A0A0] mb-1">Endereço da Obra</label>
-                <input
-                  type="text"
-                  placeholder="ex: Av. Brasil, 500"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full bg-[#151517] border border-[#1F1F21] rounded-lg p-2 text-white focus:border-[#F2A30F] outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#A0A0A0] mb-1">Engenheiro / Responsável Técnico</label>
-                <input
-                  type="text"
-                  placeholder="ex: Eng. Marcos Pereira (CREA 12345)"
-                  value={engineerInCharge}
-                  onChange={(e) => setEngineerInCharge(e.target.value)}
-                  className="w-full bg-[#151517] border border-[#1F1F21] rounded-lg p-2 text-white focus:border-[#F2A30F] outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-[#A0A0A0] mb-1">Orçamento Insumos (R$)</label>
-                  <input
-                    type="number"
-                    step="1000"
-                    placeholder="ex: 150000"
-                    value={budgetMaterials}
-                    onChange={(e) => setBudgetMaterials(e.target.value)}
-                    className="w-full bg-[#151517] border border-[#1F1F21] rounded-lg p-2 text-white focus:border-[#F2A30F] outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[#A0A0A0] mb-1">Status Inicial</label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as any)}
-                    className="w-full bg-[#151517] border border-[#1F1F21] rounded-lg p-2 text-white focus:border-[#F2A30F] outline-none"
-                  >
-                    <option value="Em Andamento">Em Andamento</option>
-                    <option value="Planejamento">Planejamento</option>
-                    <option value="Concluída">Concluída</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-[#1F1F21]">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-[#1F1F21] rounded-lg text-[#A0A0A0] hover:text-white hover:bg-[#151517] font-medium text-xs transition-colors cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-[#F2A30F] hover:bg-amber-400 text-black font-bold rounded-lg text-xs shadow-md active:scale-95 transition-all cursor-pointer"
-                >
-                  Salvar Obra
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 {
-  "name": "Controle de Estoque de Insumos",
-  "description": "Aplicativo completo para gestão e controle de estoque de insumos de construção civil, canteiros de obras, movimentações e assistente de cálculo IA.",
+  "name": "Hogar Empreendimentos",
+  "description": "Aplicativo de gestão e controle de estoque de insumos e canteiros de obras da Hogar Empreendimentos com suporte a múltiplos catálogos de usuário.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -9,6 +9,7 @@ interface QuickMovementModalProps {
   worksites: WorkSite[];
   preSelectedMaterialId?: string;
   onAddMovement: (movement: Omit<StockMovement, 'id' | 'date'>, updatedUnitPrice?: number) => void;
+  defaultResponsible?: string;
 }
 
 const WORK_PHASES: WorkPhase[] = [
@@ -30,6 +31,7 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
   worksites,
   preSelectedMaterialId,
   onAddMovement,
+  defaultResponsible = '',
 }) => {
   const [materialId, setMaterialId] = useState<string>(preSelectedMaterialId || (materials[0]?.id || ''));
   const [type, setType] = useState<MovementType>('SAIDA');
@@ -38,13 +40,27 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
   const [workSiteId, setWorkSiteId] = useState<string>(worksites[0]?.id || '');
   const [workPhase, setWorkPhase] = useState<WorkPhase>('Estrutura / Concretagem');
   const [invoiceNumber, setInvoiceNumber] = useState<string>('');
-  const [responsible, setResponsible] = useState<string>('');
+  const [responsible, setResponsible] = useState<string>(defaultResponsible);
   const [notes, setNotes] = useState<string>('');
+  const [itemDetail, setItemDetail] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  if (!isOpen) return null;
-
   const selectedMaterial = materials.find((m) => m.id === materialId);
+
+  // Sync default detail when material changes
+  React.useEffect(() => {
+    if (selectedMaterial) {
+      if (selectedMaterial.detailsOptions && selectedMaterial.detailsOptions.length > 0) {
+        setItemDetail(selectedMaterial.detailsOptions[0]);
+      } else if (selectedMaterial.details) {
+        setItemDetail(selectedMaterial.details);
+      } else {
+        setItemDetail('');
+      }
+    }
+  }, [materialId]);
+
+  if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +97,7 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
         type,
         materialId: selectedMaterial.id,
         materialName: selectedMaterial.name,
+        itemDetail: itemDetail.trim() ? itemDetail.trim() : undefined,
         quantity: qty,
         unit: selectedMaterial.unit,
         unitPrice: price,
@@ -218,6 +235,49 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
                 </span>
               </div>
             )}
+          </div>
+
+          {/* Item Detail (e.g. Color) */}
+          <div className="bg-[#151517] p-3 rounded-xl border border-[#222226]">
+            <label className="block text-xs font-bold text-[#F2A30F] mb-1">
+              Detalhe / Variação do Insumo (ex: Cor, Marca, Especificação)
+            </label>
+            {selectedMaterial?.detailsOptions && selectedMaterial.detailsOptions.length > 0 ? (
+              <div className="space-y-1.5">
+                <select
+                  value={itemDetail}
+                  onChange={(e) => setItemDetail(e.target.value)}
+                  className="w-full bg-[#0F0F11] border border-[#333333] rounded-lg p-2 text-white focus:ring-2 focus:ring-[#F2A30F] outline-none text-xs"
+                >
+                  {selectedMaterial.detailsOptions.map((opt) => (
+                    <option key={opt} value={opt} className="bg-[#151517] text-white">
+                      {opt}
+                    </option>
+                  ))}
+                  <option value="">+ Outro / Personalizado...</option>
+                </select>
+                {(!itemDetail || !selectedMaterial.detailsOptions.includes(itemDetail)) && (
+                  <input
+                    type="text"
+                    placeholder="Digite o detalhe (ex: Cor Vermelha, Tipo Fosco)..."
+                    value={itemDetail}
+                    onChange={(e) => setItemDetail(e.target.value)}
+                    className="w-full bg-[#0F0F11] border border-[#333333] rounded-lg p-2 text-white placeholder-[#555555] focus:ring-2 focus:ring-[#F2A30F] outline-none text-xs"
+                  />
+                )}
+              </div>
+            ) : (
+              <input
+                type="text"
+                placeholder="ex: Cor: Vermelho, Modelo A, 400ml..."
+                value={itemDetail}
+                onChange={(e) => setItemDetail(e.target.value)}
+                className="w-full bg-[#0F0F11] border border-[#333333] rounded-lg p-2 text-white placeholder-[#555555] focus:ring-2 focus:ring-[#F2A30F] outline-none text-xs"
+              />
+            )}
+            <span className="text-[10px] text-[#888888] mt-1 block">
+              A especificação selecionada ficará registrada no histórico da movimentação.
+            </span>
           </div>
 
           {/* Quantity & Unit Price */}

@@ -9,16 +9,23 @@ import {
   Download,
   Calendar,
   Building,
-  User,
+  User as UserIcon,
   FileText,
   Plus,
+  Edit2,
+  Trash2,
+  ShieldCheck,
 } from 'lucide-react';
-import { MovementType, StockMovement, WorkPhase, WorkSite } from '../types';
+import { MovementType, StockMovement, WorkPhase, WorkSite, isGlobalWorksiteRole } from '../types';
+import type { User } from '../types';
 
 interface MovementsViewProps {
   movements: StockMovement[];
   worksites: WorkSite[];
+  currentUser?: User | null;
   onOpenNewMovement: () => void;
+  onEditMovement: (movement: StockMovement) => void;
+  onDeleteMovement: (id: string) => void;
 }
 
 const WORK_PHASES: WorkPhase[] = [
@@ -36,12 +43,17 @@ const WORK_PHASES: WorkPhase[] = [
 export const MovementsView: React.FC<MovementsViewProps> = ({
   movements,
   worksites,
+  currentUser,
   onOpenNewMovement,
+  onEditMovement,
+  onDeleteMovement,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | MovementType>('ALL');
   const [selectedWorksite, setSelectedWorksite] = useState<string>('ALL');
   const [selectedPhase, setSelectedPhase] = useState<string>('ALL');
+
+  const isGlobalUser = isGlobalWorksiteRole(currentUser?.role);
 
   const filteredMovements = movements.filter((mov) => {
     const matchesSearch =
@@ -93,6 +105,22 @@ export const MovementsView: React.FC<MovementsViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Global Access Role Banner */}
+      {isGlobalUser && (
+        <div className="bg-emerald-950/40 border border-emerald-500/30 p-3.5 rounded-2xl text-emerald-300 text-xs flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div>
+              <span className="font-bold text-white">Monitoramento Global de Movimentações:</span> Como{' '}
+              <span className="text-emerald-400 font-semibold">{currentUser?.role}</span>, você possui acesso ao histórico consolidado de entradas e saídas de todos os canteiros.
+            </div>
+          </div>
+          <span className="bg-emerald-900/60 border border-emerald-500/40 font-mono text-[10px] font-bold px-2 py-1 rounded-lg shrink-0">
+            VISÃO GLOBAL
+          </span>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="bg-[#0F0F11] rounded-2xl border border-[#1F1F21] p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -239,12 +267,13 @@ export const MovementsView: React.FC<MovementsViewProps> = ({
                 <th className="p-3.5">Obra / Destino</th>
                 <th className="p-3.5">Etapa da Obra</th>
                 <th className="p-3.5">NF-e / Responsável</th>
+                <th className="p-3.5 text-center">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1F1F21] text-[#E0E0E0]">
               {filteredMovements.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-[#666666]">
+                  <td colSpan={9} className="p-8 text-center text-[#666666]">
                     Nenhuma movimentação registrada com os filtros aplicados.
                   </td>
                 </tr>
@@ -276,9 +305,16 @@ export const MovementsView: React.FC<MovementsViewProps> = ({
                         )}
                       </td>
                       <td className="p-3 font-bold text-white max-w-xs truncate">
-                        {mov.materialName}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>{mov.materialName}</span>
+                          {mov.itemDetail && (
+                            <span className="bg-[#1F1F21] text-[#F2A30F] border border-[#333333] font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded">
+                              {mov.itemDetail}
+                            </span>
+                          )}
+                        </div>
                         {mov.notes && (
-                          <p className="text-[11px] text-[#888888] font-normal italic truncate">{mov.notes}</p>
+                          <p className="text-[11px] text-[#888888] font-normal italic truncate mt-0.5">{mov.notes}</p>
                         )}
                       </td>
                       <td className="p-3 text-right font-mono font-bold text-white text-sm whitespace-nowrap">
@@ -311,13 +347,35 @@ export const MovementsView: React.FC<MovementsViewProps> = ({
                       </td>
                       <td className="p-3 text-[#888888] text-[11px]">
                         <div className="font-semibold text-[#E0E0E0] flex items-center gap-1">
-                          <User className="w-3 h-3 text-[#666666]" /> {mov.responsible}
+                          <UserIcon className="w-3 h-3 text-[#666666]" /> {mov.responsible}
                         </div>
                         {mov.invoiceNumber && (
                           <div className="text-emerald-400 font-mono font-semibold">
                             {mov.invoiceNumber}
                           </div>
                         )}
+                      </td>
+                      <td className="p-3 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => onEditMovement(mov)}
+                            className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
+                            title="Editar Lançamento"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Excluir lançamento do insumo ${mov.materialName}?`)) {
+                                onDeleteMovement(mov.id);
+                              }
+                            }}
+                            className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                            title="Excluir Lançamento"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

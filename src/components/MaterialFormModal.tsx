@@ -53,6 +53,8 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
   const [unit, setUnit] = useState('Saco 50kg');
   const [avgUnitPrice, setAvgUnitPrice] = useState('');
   const [location, setLocation] = useState('Almoxarifado A');
+  const [details, setDetails] = useState('');
+  const [detailsOptionsInput, setDetailsOptionsInput] = useState('');
   const [supplier, setSupplier] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [batchNumber, setBatchNumber] = useState('');
@@ -69,6 +71,8 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
       setAvgUnitPrice(materialToEdit.avgUnitPrice.toString());
       setLocation(materialToEdit.location);
       setSupplier(materialToEdit.supplier);
+      setDetails(materialToEdit.details || '');
+      setDetailsOptionsInput(materialToEdit.detailsOptions ? materialToEdit.detailsOptions.join(', ') : '');
       setExpiryDate(materialToEdit.expiryDate || '');
       setBatchNumber(materialToEdit.batchNumber || '');
       setNotes(materialToEdit.notes || '');
@@ -84,6 +88,8 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
       setAvgUnitPrice('0.00');
       setLocation('Almoxarifado Principal');
       setSupplier('');
+      setDetails('');
+      setDetailsOptionsInput('');
       setExpiryDate('');
       setBatchNumber('');
       setNotes('');
@@ -96,6 +102,10 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
     e.preventDefault();
     if (!name.trim()) return;
 
+    const parsedOptions = detailsOptionsInput
+      ? detailsOptionsInput.split(',').map((o) => o.trim()).filter((o) => o.length > 0)
+      : undefined;
+
     onSaveMaterial(
       {
         code: code.trim() || 'INS-000',
@@ -107,6 +117,8 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
         avgUnitPrice: parseFloat(avgUnitPrice) || 0,
         location: location.trim() || 'Almoxarifado',
         supplier: supplier.trim() || 'Não especificado',
+        details: details.trim() ? details.trim() : (parsedOptions && parsedOptions[0] ? parsedOptions[0] : undefined),
+        detailsOptions: parsedOptions && parsedOptions.length > 0 ? parsedOptions : undefined,
         expiryDate: expiryDate ? expiryDate : undefined,
         batchNumber: batchNumber ? batchNumber : undefined,
         notes: notes.trim() ? notes.trim() : undefined,
@@ -237,7 +249,42 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
             </div>
           </div>
 
-          {/* Row 3: Location & Supplier */}
+          {/* Row 3: Details / Variations (e.g., Colors, Specs) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#151517] p-3 rounded-xl border border-[#1F1F21]">
+            <div>
+              <label className="block text-xs font-semibold text-[#F2A30F] mb-1">
+                Detalhe / Variação Padrão (ex: Cor, Tipo)
+              </label>
+              <input
+                type="text"
+                placeholder="ex: Vermelho ou 400ml Fosco"
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                className="w-full bg-[#0F0F11] border border-[#2B2B2E] rounded-lg p-2.5 text-white placeholder-[#555555] focus:ring-2 focus:ring-[#F2A30F] outline-none text-xs"
+              />
+              <span className="text-[10px] text-[#888888] mt-0.5 block">
+                Ex: Para Tinta Spray, especifique a cor principal.
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#F2A30F] mb-1">
+                Opções de Cores / Variações (Separadas por vírgula)
+              </label>
+              <input
+                type="text"
+                placeholder="ex: Vermelho, Azul, Preto, Amarelo"
+                value={detailsOptionsInput}
+                onChange={(e) => setDetailsOptionsInput(e.target.value)}
+                className="w-full bg-[#0F0F11] border border-[#2B2B2E] rounded-lg p-2.5 text-white placeholder-[#555555] focus:ring-2 focus:ring-[#F2A30F] outline-none text-xs"
+              />
+              <span className="text-[10px] text-[#888888] mt-0.5 block">
+                Permite escolher a cor/detalhe ao lançar movimentações.
+              </span>
+            </div>
+          </div>
+
+          {/* Row 4: Location & Supplier */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#888888] mb-1">Local de Armazenamento</label>

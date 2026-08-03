@@ -14,11 +14,16 @@ import {
   Building,
   Package,
   Boxes,
+  ShieldCheck,
+  Building2,
 } from 'lucide-react';
-import { MaterialCategory, MaterialItem } from '../types';
+import { MaterialCategory, MaterialItem, WorkSite, isGlobalWorksiteRole } from '../types';
+import type { User } from '../types';
 
 interface MaterialsViewProps {
   materials: MaterialItem[];
+  worksites?: WorkSite[];
+  currentUser?: User | null;
   onOpenNewMaterial: () => void;
   onEditMaterial: (material: MaterialItem) => void;
   onDeleteMaterial: (id: string) => void;
@@ -42,6 +47,8 @@ const CATEGORIES: ('Todas' | MaterialCategory)[] = [
 
 export const MaterialsView: React.FC<MaterialsViewProps> = ({
   materials,
+  worksites = [],
+  currentUser,
   onOpenNewMaterial,
   onEditMaterial,
   onDeleteMaterial,
@@ -49,8 +56,11 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'Todas' | MaterialCategory>('Todas');
+  const [selectedWorksite, setSelectedWorksite] = useState<string>('ALL');
   const [filterType, setFilterType] = useState<'all' | 'critical' | 'expiry'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+
+  const isGlobalUser = isGlobalWorksiteRole(currentUser?.role);
 
   // Filter logic
   const filteredMaterials = materials.filter((item) => {
@@ -62,6 +72,10 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 
     const matchesCategory = selectedCategory === 'Todas' || item.category === selectedCategory;
 
+    const matchesWorksite =
+      selectedWorksite === 'ALL' ||
+      item.location.toLowerCase().includes(selectedWorksite.toLowerCase());
+
     let matchesFilter = true;
     if (filterType === 'critical') {
       matchesFilter = item.quantity <= item.minQuantity;
@@ -69,7 +83,7 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
       matchesFilter = !!item.expiryDate;
     }
 
-    return matchesSearch && matchesCategory && matchesFilter;
+    return matchesSearch && matchesCategory && matchesWorksite && matchesFilter;
   });
 
   const totalValue = materials.reduce((acc, m) => acc + m.quantity * m.avgUnitPrice, 0);
@@ -77,6 +91,22 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Global Access Role Banner */}
+      {isGlobalUser && (
+        <div className="bg-emerald-950/40 border border-emerald-500/30 p-3.5 rounded-2xl text-emerald-300 text-xs flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div>
+              <span className="font-bold text-white">Acesso Global ao Estoque Liberado:</span> Cargo de{' '}
+              <span className="text-emerald-400 font-semibold">{currentUser?.role}</span> ({currentUser?.name}) possui visão integrada e controle de insumos de todos os canteiros da Hogar Empreendimentos.
+            </div>
+          </div>
+          <span className="bg-emerald-900/60 border border-emerald-500/40 font-mono text-[10px] font-bold px-2 py-1 rounded-lg shrink-0">
+            TODAS AS OBRAS
+          </span>
+        </div>
+      )}
+
       {/* Top Banner / Actions Header */}
       <div className="bg-[#0F0F11] rounded-2xl border border-[#1F1F21] p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -185,16 +215,35 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
       {/* Filters & Search Row */}
       <div className="bg-[#0F0F11] rounded-xl border border-[#1F1F21] p-4 space-y-3 shadow-sm">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          {/* Search Bar */}
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-[#666666] absolute left-3 top-3" />
-            <input
-              type="text"
-              placeholder="Buscar por nome, código, local ou fornecedor..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#151517] border border-[#1F1F21] rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-[#666666] focus:border-[#F2A30F] outline-none transition-all"
-            />
+          {/* Search Bar & Canteiro Filter */}
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto flex-1">
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 text-[#666666] absolute left-3 top-3" />
+              <input
+                type="text"
+                placeholder="Buscar por nome, código, local..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-[#151517] border border-[#1F1F21] rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-[#666666] focus:border-[#F2A30F] outline-none transition-all"
+              />
+            </div>
+
+            {/* Canteiro Selector */}
+            <div className="relative w-full sm:w-56 shrink-0">
+              <Building2 className="w-4 h-4 text-[#F2A30F] absolute left-3 top-2.5" />
+              <select
+                value={selectedWorksite}
+                onChange={(e) => setSelectedWorksite(e.target.value)}
+                className="w-full bg-[#151517] border border-[#1F1F21] text-[#A0A0A0] focus:text-white rounded-xl pl-9 pr-3 py-2 text-xs focus:border-[#F2A30F] outline-none cursor-pointer"
+              >
+                <option value="ALL">🏢 Todos os Canteiros (Visão Global)</option>
+                {worksites.map((ws) => (
+                  <option key={ws.id} value={ws.name}>
+                    {ws.name} ({ws.code})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Quick Filter Buttons */}
@@ -317,6 +366,22 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
                     {item.supplier && (
                       <div className="text-[11px] text-[#666666] truncate">
                         Fornecedor: <span className="text-[#A0A0A0] font-medium">{item.supplier}</span>
+                      </div>
+                    )}
+                    {(item.details || (item.detailsOptions && item.detailsOptions.length > 0)) && (
+                      <div className="mt-2 flex flex-wrap gap-1 items-center">
+                        <span className="text-[10px] text-[#888888]">Detalhes/Cores:</span>
+                        {item.detailsOptions ? (
+                          item.detailsOptions.map((opt) => (
+                            <span key={opt} className="bg-[#151517] text-[#F2A30F] border border-[#2B2B2E] text-[10px] px-1.5 py-0.5 rounded font-mono">
+                              {opt}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="bg-[#151517] text-[#F2A30F] border border-[#2B2B2E] text-[10px] px-1.5 py-0.5 rounded font-mono">
+                            {item.details}
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>

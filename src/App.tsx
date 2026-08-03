@@ -7,52 +7,109 @@ import { AIAssistantView } from './components/AIAssistantView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { QuickMovementModal } from './components/QuickMovementModal';
 import { MaterialFormModal } from './components/MaterialFormModal';
-import { MaterialItem, StockMovement, WorkSite } from './types';
+import { WorksiteFormModal } from './components/WorksiteFormModal';
+import { EditMovementModal } from './components/EditMovementModal';
+import { AuthModal } from './components/AuthModal';
+import { MaterialItem, StockMovement, WorkSite, User } from './types';
 import { INITIAL_MATERIALS, INITIAL_MOVEMENTS, INITIAL_WORKSITES } from './data/initialData';
+import { INITIAL_USERS } from './data/initialUsers';
 
-const LOCAL_STORAGE_KEY_MATERIALS = 'estoque_civil_materials_v1';
-const LOCAL_STORAGE_KEY_MOVEMENTS = 'estoque_civil_movements_v1';
-const LOCAL_STORAGE_KEY_WORKSITES = 'estoque_civil_worksites_v1';
+const LOCAL_STORAGE_KEY_USERS = 'hogar_users_v1';
+const LOCAL_STORAGE_KEY_CURRENT_USER = 'hogar_current_user_v1';
+
+// Helper functions for per-user isolated storage
+const getMaterialsKey = (userId: string) => `hogar_materials_user_${userId}`;
+const getWorksitesKey = (userId: string) => `hogar_worksites_user_${userId}`;
+const getMovementsKey = (userId: string) => `hogar_movements_user_${userId}`;
+
+const loadUserMaterials = (userId: string): MaterialItem[] => {
+  const saved = localStorage.getItem(getMaterialsKey(userId));
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {
+      console.error('Error parsing materials for user', userId, e);
+    }
+  }
+  const legacy = localStorage.getItem('estoque_civil_materials_v1');
+  if (legacy && userId === INITIAL_USERS[0]?.id) {
+    try {
+      const parsed = JSON.parse(legacy);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+  return INITIAL_MATERIALS;
+};
+
+const loadUserWorksites = (userId: string): WorkSite[] => {
+  const saved = localStorage.getItem(getWorksitesKey(userId));
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {
+      console.error('Error parsing worksites for user', userId, e);
+    }
+  }
+  const legacy = localStorage.getItem('estoque_civil_worksites_v1');
+  if (legacy && userId === INITIAL_USERS[0]?.id) {
+    try {
+      const parsed = JSON.parse(legacy);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+  return INITIAL_WORKSITES;
+};
+
+const loadUserMovements = (userId: string): StockMovement[] => {
+  const saved = localStorage.getItem(getMovementsKey(userId));
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {
+      console.error('Error parsing movements for user', userId, e);
+    }
+  }
+  const legacy = localStorage.getItem('estoque_civil_movements_v1');
+  if (legacy && userId === INITIAL_USERS[0]?.id) {
+    try {
+      const parsed = JSON.parse(legacy);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+  return INITIAL_MOVEMENTS;
+};
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'materials' | 'movements' | 'worksites' | 'ai' | 'analytics'>('materials');
 
-  // Load from localStorage or default
-  const [materials, setMaterials] = useState<MaterialItem[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY_MATERIALS);
+  // Load registered users from localStorage or default
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY_USERS) || localStorage.getItem('estoque_civil_users_v1');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {
-        console.error('Failed to parse materials from localStorage', e);
+        console.error('Failed to parse users from localStorage', e);
       }
     }
-    return INITIAL_MATERIALS;
+    return INITIAL_USERS;
   });
 
-  const [movements, setMovements] = useState<StockMovement[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY_MOVEMENTS);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse movements from localStorage', e);
-      }
-    }
-    return INITIAL_MOVEMENTS;
-  });
+  // Force login screen first when accessing the link
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const [worksites, setWorksites] = useState<WorkSite[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY_WORKSITES);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse worksites from localStorage', e);
-      }
-    }
-    return INITIAL_WORKSITES;
-  });
+  const activeUserId = currentUser?.id || 'guest';
+
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // Per-user isolated datasets
+  const [materials, setMaterials] = useState<MaterialItem[]>(() => loadUserMaterials(activeUserId));
+  const [movements, setMovements] = useState<StockMovement[]>(() => loadUserMovements(activeUserId));
+  const [worksites, setWorksites] = useState<WorkSite[]>(() => loadUserWorksites(activeUserId));
 
   // Modals state
   const [isQuickMovementOpen, setIsQuickMovementOpen] = useState(false);
@@ -61,18 +118,84 @@ export default function App() {
   const [isMaterialFormOpen, setIsMaterialFormOpen] = useState(false);
   const [materialToEdit, setMaterialToEdit] = useState<MaterialItem | null>(null);
 
-  // Sync state to LocalStorage
+  const [isWorksiteFormOpen, setIsWorksiteFormOpen] = useState(false);
+  const [worksiteToEdit, setWorksiteToEdit] = useState<WorkSite | null>(null);
+
+  const [isEditMovementOpen, setIsEditMovementOpen] = useState(false);
+  const [movementToEdit, setMovementToEdit] = useState<StockMovement | null>(null);
+
+  // Sync users to LocalStorage
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY_MATERIALS, JSON.stringify(materials));
-  }, [materials]);
+    localStorage.setItem(LOCAL_STORAGE_KEY_USERS, JSON.stringify(users));
+  }, [users]);
+
+  // Sync active user & switch dataset when active user changes
+  useEffect(() => {
+    if (currentUser?.id) {
+      localStorage.setItem(LOCAL_STORAGE_KEY_CURRENT_USER, JSON.stringify(currentUser));
+      // Reload user specific data
+      setMaterials(loadUserMaterials(currentUser.id));
+      setWorksites(loadUserWorksites(currentUser.id));
+      setMovements(loadUserMovements(currentUser.id));
+    } else {
+      localStorage.removeItem(LOCAL_STORAGE_KEY_CURRENT_USER);
+    }
+  }, [currentUser?.id]);
+
+  // Sync user isolated datasets to LocalStorage
+  useEffect(() => {
+    if (currentUser?.id) {
+      localStorage.setItem(getMaterialsKey(currentUser.id), JSON.stringify(materials));
+    }
+  }, [materials, currentUser?.id]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY_MOVEMENTS, JSON.stringify(movements));
-  }, [movements]);
+    if (currentUser?.id) {
+      localStorage.setItem(getMovementsKey(currentUser.id), JSON.stringify(movements));
+    }
+  }, [movements, currentUser?.id]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY_WORKSITES, JSON.stringify(worksites));
-  }, [worksites]);
+    if (currentUser?.id) {
+      localStorage.setItem(getWorksitesKey(currentUser.id), JSON.stringify(worksites));
+    }
+  }, [worksites, currentUser?.id]);
+
+  // Auth actions
+  const handleLoginSuccess = (user: User) => {
+    setCurrentUser(user);
+    setIsAuthModalOpen(false);
+  };
+
+  const handleRegisterUser = (newUser: User) => {
+    setUsers((prev) => [newUser, ...prev]);
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    const userToDelete = users.find((u) => u.id === userId);
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+
+    // Clean up storage
+    localStorage.removeItem(getMaterialsKey(userId));
+    localStorage.removeItem(getWorksitesKey(userId));
+    localStorage.removeItem(getMovementsKey(userId));
+
+    if (currentUser?.id === userId) {
+      const remainingUsers = users.filter((u) => u.id !== userId);
+      if (remainingUsers.length > 0) {
+        setCurrentUser(remainingUsers[0]);
+      } else {
+        setCurrentUser(null);
+        setIsAuthModalOpen(true);
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setIsAuthModalOpen(true);
+  };
+
 
   // Open Movement Modal for specific material
   const handleOpenQuickMovement = (materialId?: string) => {
@@ -164,14 +287,104 @@ export default function App() {
     }
   };
 
-  // Add Worksite
-  const handleAddWorksite = (worksiteData: Omit<WorkSite, 'id' | 'totalSpentMaterials'>) => {
-    const newWorksite: WorkSite = {
-      ...worksiteData,
-      id: `obra-${Date.now()}`,
-      totalSpentMaterials: 0,
-    };
-    setWorksites((prev) => [newWorksite, ...prev]);
+  // Edit Movement Modal Trigger
+  const handleOpenEditMovement = (movement: StockMovement) => {
+    setMovementToEdit(movement);
+    setIsEditMovementOpen(true);
+  };
+
+  // Save (update) Movement
+  const handleSaveMovement = (id: string, updatedData: Partial<StockMovement>) => {
+    const oldMovement = movements.find((m) => m.id === id);
+    if (!oldMovement) return;
+
+    // First reverse old movement stock effect on material
+    setMaterials((prev) =>
+      prev.map((mat) => {
+        if (mat.id === oldMovement.materialId) {
+          let restoredQty = mat.quantity;
+          if (oldMovement.type === 'ENTRADA' || oldMovement.type === 'DEVOLUCAO') {
+            restoredQty = Math.max(0, restoredQty - oldMovement.quantity);
+          } else if (oldMovement.type === 'SAIDA' || oldMovement.type === 'AJUSTE') {
+            restoredQty += oldMovement.quantity;
+          }
+
+          // Apply new movement stock effect
+          const newType = updatedData.type || oldMovement.type;
+          const newQty = updatedData.quantity !== undefined ? updatedData.quantity : oldMovement.quantity;
+
+          if (newType === 'ENTRADA' || newType === 'DEVOLUCAO') {
+            restoredQty += newQty;
+          } else if (newType === 'SAIDA' || newType === 'AJUSTE') {
+            restoredQty = Math.max(0, restoredQty - newQty);
+          }
+
+          return {
+            ...mat,
+            quantity: restoredQty,
+            lastUpdated: new Date().toISOString().slice(0, 10),
+          };
+        }
+        return mat;
+      })
+    );
+
+    // Update movement record
+    setMovements((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, ...updatedData } : m))
+    );
+  };
+
+  // Delete Movement
+  const handleDeleteMovement = (id: string) => {
+    const movToDelete = movements.find((m) => m.id === id);
+    if (movToDelete) {
+      // Reverse stock effect on material
+      setMaterials((prev) =>
+        prev.map((mat) => {
+          if (mat.id === movToDelete.materialId) {
+            let adjustedQty = mat.quantity;
+            if (movToDelete.type === 'ENTRADA' || movToDelete.type === 'DEVOLUCAO') {
+              adjustedQty = Math.max(0, adjustedQty - movToDelete.quantity);
+            } else if (movToDelete.type === 'SAIDA' || movToDelete.type === 'AJUSTE') {
+              adjustedQty += movToDelete.quantity;
+            }
+            return {
+              ...mat,
+              quantity: adjustedQty,
+              lastUpdated: new Date().toISOString().slice(0, 10),
+            };
+          }
+          return mat;
+        })
+      );
+    }
+
+    setMovements((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  // Save (Create or Edit) Worksite
+  const handleSaveWorksite = (
+    worksiteData: Omit<WorkSite, 'id' | 'totalSpentMaterials'>,
+    id?: string
+  ) => {
+    if (id) {
+      setWorksites((prev) =>
+        prev.map((w) => (w.id === id ? { ...w, ...worksiteData } : w))
+      );
+    } else {
+      const newWorksite: WorkSite = {
+        ...worksiteData,
+        id: `obra-${Date.now()}`,
+        totalSpentMaterials: 0,
+      };
+      setWorksites((prev) => [newWorksite, ...prev]);
+    }
+  };
+
+  // Delete Worksite
+  const handleDeleteWorksite = (id: string) => {
+    setWorksites((prev) => prev.filter((w) => w.id !== id));
   };
 
   // Batch Add Materials from AI Estimator
@@ -266,6 +479,11 @@ export default function App() {
         setActiveTab={setActiveTab}
         materials={materials}
         onOpenNewMovement={() => handleOpenQuickMovement()}
+        currentUser={currentUser}
+        users={users}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
+        onDeleteUser={handleDeleteUser}
       />
 
       {/* Main Content Area */}
@@ -273,6 +491,8 @@ export default function App() {
         {activeTab === 'materials' && (
           <MaterialsView
             materials={materials}
+            worksites={worksites}
+            currentUser={currentUser}
             onOpenNewMaterial={() => {
               setMaterialToEdit(null);
               setIsMaterialFormOpen(true);
@@ -290,7 +510,10 @@ export default function App() {
           <MovementsView
             movements={movements}
             worksites={worksites}
+            currentUser={currentUser}
             onOpenNewMovement={() => handleOpenQuickMovement()}
+            onEditMovement={handleOpenEditMovement}
+            onDeleteMovement={handleDeleteMovement}
           />
         )}
 
@@ -298,7 +521,16 @@ export default function App() {
           <WorksitesView
             worksites={worksites}
             movements={movements}
-            onAddWorksite={handleAddWorksite}
+            currentUser={currentUser}
+            onOpenNewWorksite={() => {
+              setWorksiteToEdit(null);
+              setIsWorksiteFormOpen(true);
+            }}
+            onEditWorksite={(site) => {
+              setWorksiteToEdit(site);
+              setIsWorksiteFormOpen(true);
+            }}
+            onDeleteWorksite={handleDeleteWorksite}
             onOpenQuickMovement={() => handleOpenQuickMovement()}
           />
         )}
@@ -330,6 +562,18 @@ export default function App() {
         worksites={worksites}
         preSelectedMaterialId={preSelectedMaterialId}
         onAddMovement={handleAddMovement}
+        defaultResponsible={currentUser?.name || ''}
+      />
+
+      {/* Edit Movement Modal */}
+      <EditMovementModal
+        isOpen={isEditMovementOpen}
+        onClose={() => setIsEditMovementOpen(false)}
+        movement={movementToEdit}
+        materials={materials}
+        worksites={worksites}
+        onSaveMovement={handleSaveMovement}
+        onDeleteMovement={handleDeleteMovement}
       />
 
       {/* Create / Edit Material Modal */}
@@ -340,14 +584,35 @@ export default function App() {
         onSaveMaterial={handleSaveMaterial}
       />
 
+      {/* Create / Edit Worksite Modal */}
+      <WorksiteFormModal
+        isOpen={isWorksiteFormOpen}
+        onClose={() => setIsWorksiteFormOpen(false)}
+        worksiteToEdit={worksiteToEdit}
+        onSaveWorksite={handleSaveWorksite}
+        onDeleteWorksite={handleDeleteWorksite}
+      />
+
+      {/* Auth / Login Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen || !currentUser}
+        onClose={() => setIsAuthModalOpen(false)}
+        users={users}
+        onLoginSuccess={handleLoginSuccess}
+        onRegisterUser={handleRegisterUser}
+        onDeleteUser={handleDeleteUser}
+        isGateMode={!currentUser}
+      />
+
+
       {/* Footer */}
       <footer className="bg-[#0F0F11] border-t border-[#1F1F21] text-[#888888] py-6 text-center text-xs">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>© {new Date().getFullYear()} Estoque Civil Pro — Sistema de Controle de Insumos para Construção Civil</p>
+          <p>© {new Date().getFullYear()} Hogar Empreendimentos — Gestão de Materiais e Almoxarifado de Obras</p>
           <div className="flex items-center gap-4 text-[#888888]">
             <span>NBR/ABNT Compliant</span>
             <span>•</span>
-            <span>Gestão de Canteiros de Obras</span>
+            <span>Canteiros de Obras Integrados</span>
           </div>
         </div>
       </footer>

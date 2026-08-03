@@ -35,6 +35,8 @@ export interface MaterialItem {
   avgUnitPrice: number; // Valor médio R$
   location: string; // ex: "Almoxarifado Central", "Pátio 1"
   supplier: string;
+  details?: string; // ex: "Especificação / Cor / Variação"
+  detailsOptions?: string[]; // ex: ["Vermelho", "Azul", "Preto", "Branco"]
   expiryDate?: string; // Validade (importante p/ Cimento, Argamassas, Resinas)
   batchNumber?: string;
   lastUpdated: string;
@@ -47,6 +49,7 @@ export interface StockMovement {
   type: MovementType;
   materialId: string;
   materialName: string;
+  itemDetail?: string; // ex: "Cor: Vermelho" ou "Azul"
   quantity: number;
   unit: string;
   unitPrice?: number;
@@ -119,3 +122,38 @@ export interface StockAlertAI {
   }[];
   storageOptimizationTips: string[];
 }
+
+export type UserRole =
+  | 'Coordenador de Obra'
+  | 'Engenheiro/a'
+  | 'Engenheira/o'
+  | 'Engenheiro Residente'
+  | 'Almoxarife'
+  | 'Mestre de Obras'
+  | 'Gerente de Compras'
+  | 'Administrador';
+
+export const isGlobalWorksiteRole = (role?: string): boolean => {
+  if (!role) return false;
+  const normalized = role.toLowerCase().trim();
+  return (
+    normalized.includes('coordenador') ||
+    normalized.includes('engenheiro') ||
+    normalized.includes('engenheira') ||
+    normalized.includes('admin') ||
+    normalized.includes('gerente')
+  );
+};
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  password?: string;
+  role: UserRole;
+  avatarUrl?: string;
+  createdAt: string;
+  lastLogin?: string;
+  worksiteAssigned?: string;
+}
+
