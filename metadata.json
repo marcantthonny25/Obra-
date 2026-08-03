@@ -1,0 +1,6 @@
+{
+  "name": "Controle de Estoque de Insumos",
+  "description": "Aplicativo completo para gestão e controle de estoque de insumos de construção civil, canteiros de obras, movimentações e assistente de cálculo IA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
