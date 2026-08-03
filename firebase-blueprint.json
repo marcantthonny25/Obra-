@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User accounts for authentication and permissions",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string" },
+        "worksiteAssigned": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "materials": {
+      "title": "Materials",
+      "description": "Inventory stock items across construction sites",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string" },
+        "minQuantity": { "type": "number" },
+        "maxQuantity": { "type": "number" },
+        "avgUnitPrice": { "type": "number" },
+        "location": { "type": "string" },
+        "supplier": { "type": "string" },
+        "lastUpdate": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "name", "quantity", "unit"]
+    },
+    "movements": {
+      "title": "Movements",
+      "description": "Inbound and outbound stock movements",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "type": { "type": "string" },
+        "materialId": { "type": "string" },
+        "materialName": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string" },
+        "worksiteId": { "type": "string" },
+        "worksiteName": { "type": "string" },
+        "requester": { "type": "string" },
+        "responsible": { "type": "string" },
+        "notes": { "type": "string" },
+        "workPhase": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "unitPrice": { "type": "number" }
+      },
+      "required": ["id", "materialId", "quantity", "type"]
+    },
+    "worksites": {
+      "title": "Worksites",
+      "description": "Construction sites / canteiros de obras",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "address": { "type": "string" },
+        "engineer": { "type": "string" },
+        "status": { "type": "string" },
+        "budget": { "type": "number" },
+        "budgetSpent": { "type": "number" }
+      },
+      "required": ["id", "name", "code"]
+    }
+  }
+}
