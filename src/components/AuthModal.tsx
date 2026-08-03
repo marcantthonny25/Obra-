@@ -75,6 +75,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null;
 
+  const hasAdmin = users.some(
+    (u) => (u.role === 'Administrador' || u.role?.toLowerCase() === 'admin') && u.status !== 'INATIVO'
+  );
+
   // Handle Login Submit
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +96,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
+    if (userFound.status === 'INATIVO') {
+      setErrorMsg('Sua conta está desativada. Entre em contato com o Administrador.');
+      return;
+    }
+
     setSuccessMsg(`Bem-vindo(a) de volta, ${userFound.name}!`);
     setTimeout(() => {
       onLoginSuccess(userFound);
@@ -99,11 +108,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }, 500);
   };
 
-  // Handle Register Submit
+  // Handle Register Submit (Initial Admin Setup only if no admin exists)
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+
+    if (hasAdmin) {
+      setErrorMsg('O cadastro público está desativado. Solicite sua conta ao Administrador.');
+      return;
+    }
 
     if (!regName.trim() || !regEmail.trim() || !regPassword) {
       setErrorMsg('Por favor, preencha todos os campos obrigatórios.');
@@ -132,13 +146,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       name: regName.trim(),
       email: cleanEmail,
       password: regPassword,
-      role: regRole,
+      role: 'Administrador', // First registered user is automatically Administrator
+      status: 'ATIVO',
       createdAt: new Date().toISOString(),
-      worksiteAssigned: regWorksite.trim() || 'Almoxarifado Principal',
+      worksiteAssigned: regWorksite.trim() || 'Todas as Obras',
     };
 
     onRegisterUser(newUser);
-    setSuccessMsg(`Conta criada com sucesso! Acessando como ${newUser.name}...`);
+    setSuccessMsg(`Conta de Administrador criada com sucesso! Acessando como ${newUser.name}...`);
 
     setTimeout(() => {
       onLoginSuccess(newUser);
@@ -182,40 +197,49 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Tab Switcher */}
           {!forgotPasswordView && (
-            <div className="flex bg-[#09090A] border border-[#222226] p-1 rounded-2xl mt-5 max-w-xs mx-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('login');
-                  setErrorMsg('');
-                  setSuccessMsg('');
-                }}
-                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  activeTab === 'login'
-                    ? 'bg-[#F2A30F] text-black shadow-md'
-                    : 'text-[#888888] hover:text-white'
-                }`}
-              >
-                <Lock className="w-3.5 h-3.5" />
-                Entrar
-              </button>
+            <div className="mt-5 max-w-sm mx-auto">
+              {!hasAdmin ? (
+                <div className="flex bg-[#09090A] border border-[#222226] p-1 rounded-2xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('login');
+                      setErrorMsg('');
+                      setSuccessMsg('');
+                    }}
+                    className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTab === 'login'
+                        ? 'bg-[#F2A30F] text-black shadow-md'
+                        : 'text-[#888888] hover:text-white'
+                    }`}
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    Entrar
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('register');
-                  setErrorMsg('');
-                  setSuccessMsg('');
-                }}
-                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  activeTab === 'register'
-                    ? 'bg-[#F2A30F] text-black shadow-md'
-                    : 'text-[#888888] hover:text-white'
-                }`}
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                Criar Conta
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('register');
+                      setErrorMsg('');
+                      setSuccessMsg('');
+                    }}
+                    className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTab === 'register'
+                        ? 'bg-[#F2A30F] text-black shadow-md'
+                        : 'text-[#888888] hover:text-white'
+                    }`}
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    Criar 1º Admin
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-[#151517] border border-[#222226] p-2.5 rounded-xl text-[11px] text-[#A0A0A0] flex items-center justify-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Acesso Restrito: Novos usuários são criados pelo Administrador</span>
+                </div>
+              )}
             </div>
           )}
         </div>

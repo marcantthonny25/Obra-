@@ -133,6 +133,8 @@ export type UserRole =
   | 'Gerente de Compras'
   | 'Administrador';
 
+export type UserStatus = 'ATIVO' | 'INATIVO';
+
 export const isGlobalWorksiteRole = (role?: string): boolean => {
   if (!role) return false;
   const normalized = role.toLowerCase().trim();
@@ -145,15 +147,37 @@ export const isGlobalWorksiteRole = (role?: string): boolean => {
   );
 };
 
+export const canManageUsers = (role?: string): boolean => {
+  if (!role) return false;
+  return role.toLowerCase().trim() === 'administrador' || role.toLowerCase().trim() === 'admin';
+};
+
+export const canCreateOrEditMovements = (role?: string): boolean => {
+  if (!role) return false;
+  const norm = role.toLowerCase().trim();
+  // Administrador and Almoxarife can execute stock movements
+  return norm === 'administrador' || norm === 'admin' || norm.includes('almoxarife');
+};
+
+export const canCreateOrEditCatalog = (role?: string): boolean => {
+  if (!role) return false;
+  const norm = role.toLowerCase().trim();
+  // Administrador, Almoxarife can edit catalog
+  return norm === 'administrador' || norm === 'admin' || norm.includes('almoxarife');
+};
+
 export interface User {
   id: string;
   name: string;
   email: string;
   password?: string;
   role: UserRole;
+  status?: UserStatus;
+  mustChangePassword?: boolean;
   avatarUrl?: string;
   createdAt: string;
   lastLogin?: string;
   worksiteAssigned?: string;
+  worksitesAllowed?: string[];
 }
 

@@ -7,6 +7,8 @@ import { MovementsView } from './components/MovementsView';
 import { WorksitesView } from './components/WorksitesView';
 import { AIAssistantView } from './components/AIAssistantView';
 import { AnalyticsView } from './components/AnalyticsView';
+import { UsersManagementView } from './components/UsersManagementView';
+import { FirstAccessPasswordModal } from './components/FirstAccessPasswordModal';
 import { QuickMovementModal } from './components/QuickMovementModal';
 import { MaterialFormModal } from './components/MaterialFormModal';
 import { WorksiteFormModal } from './components/WorksiteFormModal';
@@ -19,7 +21,7 @@ import { INITIAL_USERS } from './data/initialUsers';
 const LOCAL_STORAGE_KEY_CURRENT_USER = 'hogar_current_user_v2';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'materials' | 'movements' | 'worksites' | 'ai' | 'analytics'>('materials');
+  const [activeTab, setActiveTab] = useState<'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users'>('materials');
 
   // Real-time synced Firestore state
   const [users, setUsers] = useState<User[]>([]);
@@ -135,6 +137,17 @@ export default function App() {
       await setDoc(doc(db, 'users', newUser.id), newUser);
     } catch (err) {
       console.error('Error saving new user to Firestore:', err);
+    }
+  };
+
+  const handleUpdateUser = async (updatedUser: User) => {
+    try {
+      await setDoc(doc(db, 'users', updatedUser.id), updatedUser);
+      if (currentUser?.id === updatedUser.id) {
+        setCurrentUser(updatedUser);
+      }
+    } catch (err) {
+      console.error('Error updating user in Firestore:', err);
     }
   };
 
@@ -480,7 +493,33 @@ export default function App() {
             onImportBackupJSON={handleImportBackupJSON}
           />
         )}
+
+        {activeTab === 'users' && (
+          <UsersManagementView
+            users={users}
+            worksites={worksites}
+            currentUser={currentUser}
+            onRegisterUser={handleRegisterUser}
+            onUpdateUser={handleUpdateUser}
+            onDeleteUser={handleDeleteUser}
+          />
+        )}
       </main>
+
+      {/* Mandatory First Access Password Change Modal */}
+      {currentUser && currentUser.mustChangePassword && (
+        <FirstAccessPasswordModal
+          user={currentUser}
+          onPasswordChanged={(newPassword) => {
+            const updated = {
+              ...currentUser,
+              password: newPassword,
+              mustChangePassword: false,
+            };
+            handleUpdateUser(updated);
+          }}
+        />
+      )}
 
       {/* Quick Movement Modal */}
       <QuickMovementModal

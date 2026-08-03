@@ -17,7 +17,7 @@ import {
   ShieldCheck,
   Building2,
 } from 'lucide-react';
-import { MaterialCategory, MaterialItem, WorkSite, isGlobalWorksiteRole } from '../types';
+import { MaterialCategory, MaterialItem, WorkSite, isGlobalWorksiteRole, canCreateOrEditCatalog, canCreateOrEditMovements } from '../types';
 import type { User } from '../types';
 
 interface MaterialsViewProps {
@@ -141,13 +141,20 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
             </button>
           </div>
 
-          <button
-            onClick={onOpenNewMaterial}
-            className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-md active:scale-95 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            Novo Insumo
-          </button>
+          {canCreateOrEditCatalog(currentUser?.role) ? (
+            <button
+              onClick={onOpenNewMaterial}
+              className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-md active:scale-95 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              Novo Insumo
+            </button>
+          ) : (
+            <span className="bg-[#151517] border border-[#222226] text-[#888888] px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+              Somente Leitura ({currentUser?.role || 'Consulta'})
+            </span>
+          )}
         </div>
       </div>
 

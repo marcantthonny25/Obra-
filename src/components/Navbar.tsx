@@ -22,12 +22,13 @@ import {
   Image as ImageIcon,
   Wrench,
   Factory,
+  Users,
 } from 'lucide-react';
-import { MaterialItem, User } from '../types';
+import { MaterialItem, User, canManageUsers } from '../types';
 
 interface NavbarProps {
-  activeTab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics';
-  setActiveTab: (tab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics') => void;
+  activeTab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users';
+  setActiveTab: (tab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users') => void;
   materials: MaterialItem[];
   onOpenNewMovement: () => void;
   currentUser: User | null;
@@ -281,16 +282,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span>Trocar Foto / Logotipo Topo</span>
                   </button>
 
-                  <button
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      onOpenAuthModal();
-                    }}
-                    className="w-full p-2.5 rounded-xl text-left hover:bg-[#151517] text-[#E0E0E0] hover:text-white flex items-center gap-2 transition-colors cursor-pointer"
-                  >
-                    <UserPlus className="w-4 h-4 text-[#F2A30F]" />
-                    <span>Gerenciar / Cadastrar Usuários</span>
-                  </button>
+                  {canManageUsers(currentUser?.role) && (
+                    <button
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        setActiveTab('users');
+                      }}
+                      className="w-full p-2.5 rounded-xl text-left hover:bg-[#151517] text-[#E0E0E0] hover:text-white flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <Users className="w-4 h-4 text-[#F2A30F]" />
+                      <span>Gerenciar Usuários & Permissões</span>
+                    </button>
+                  )}
 
                   <button
                     onClick={() => {
@@ -371,6 +374,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             <BarChart3 className="w-4 h-4" />
             Relatórios & Análise
           </button>
+
+          {canManageUsers(currentUser?.role) && (
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
+                activeTab === 'users'
+                  ? 'border-[#F2A30F] text-[#F2A30F] bg-[#151517]'
+                  : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
+              }`}
+            >
+              <Users className="w-4 h-4 text-[#F2A30F]" />
+              Gerenciar Usuários
+            </button>
+          )}
         </nav>
       </div>
 

@@ -1,8 +1,29 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+
+    // Users Collection (User accounts & roles)
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update, delete: if true;
+    }
+
+    // Materials / Stock Catalog Collection
+    match /materials/{materialId} {
+      allow read: if true;
+      allow create, update, delete: if true;
+    }
+
+    // Stock Movements Collection (Entrada / Saída / Ajuste)
+    match /movements/{movementId} {
+      allow read: if true;
+      allow create, update, delete: if true;
+    }
+
+    // Worksites / Canteiros de Obras Collection
+    match /worksites/{worksiteId} {
+      allow read: if true;
+      allow create, update, delete: if true;
     }
   }
 }

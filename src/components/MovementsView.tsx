@@ -16,7 +16,7 @@ import {
   Trash2,
   ShieldCheck,
 } from 'lucide-react';
-import { MovementType, StockMovement, WorkPhase, WorkSite, isGlobalWorksiteRole } from '../types';
+import { MovementType, StockMovement, WorkPhase, WorkSite, isGlobalWorksiteRole, canCreateOrEditMovements } from '../types';
 import type { User } from '../types';
 
 interface MovementsViewProps {
@@ -140,13 +140,20 @@ export const MovementsView: React.FC<MovementsViewProps> = ({
             <Download className="w-4 h-4" />
             Exportar CSV
           </button>
-          <button
-            onClick={onOpenNewMovement}
-            className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-md active:scale-95 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            Lançar Movimentação
-          </button>
+          {canCreateOrEditMovements(currentUser?.role) ? (
+            <button
+              onClick={onOpenNewMovement}
+              className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-md active:scale-95 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              Lançar Movimentação
+            </button>
+          ) : (
+            <span className="bg-[#151517] border border-[#222226] text-[#888888] px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+              Somente Leitura ({currentUser?.role || 'Consulta'})
+            </span>
+          )}
         </div>
       </div>
 
@@ -356,26 +363,30 @@ export const MovementsView: React.FC<MovementsViewProps> = ({
                         )}
                       </td>
                       <td className="p-3 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => onEditMovement(mov)}
-                            className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
-                            title="Editar Lançamento"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm(`Excluir lançamento do insumo ${mov.materialName}?`)) {
-                                onDeleteMovement(mov.id);
-                              }
-                            }}
-                            className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
-                            title="Excluir Lançamento"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        {canCreateOrEditMovements(currentUser?.role) ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => onEditMovement(mov)}
+                              className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
+                              title="Editar Lançamento"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Excluir lançamento do insumo ${mov.materialName}?`)) {
+                                  onDeleteMovement(mov.id);
+                                }
+                              }}
+                              className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                              title="Excluir Lançamento"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-[#666666] font-mono">Consulta</span>
+                        )}
                       </td>
                     </tr>
                   );
