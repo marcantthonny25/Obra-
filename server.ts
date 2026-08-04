@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -198,6 +199,19 @@ Responda ESTRITAMENTE em formato JSON com o schema:
 
 // Setup Vite Development Middleware or Production Static Server
 async function startServer() {
+  const distPath = path.join(process.cwd(), "dist");
+  const publicPath = path.join(process.cwd(), "public");
+
+  // Serve static files from public directory if present
+  if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+  }
+
+  // Serve static files from dist directory if present
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+  }
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -205,9 +219,13 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
     app.get("*", (req, res) => {
+      if (req.path.startsWith("/api/")) {
+        return res.status(404).json({ error: "API route not found" });
+      }
+      if (req.path.startsWith("/assets/") || /\.(js|css|png|jpg|jpeg|webp|svg|ico|json|woff2?)$/i.test(req.path)) {
+        return res.status(404).send("Asset not found");
+      }
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
