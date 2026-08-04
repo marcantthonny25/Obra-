@@ -24,12 +24,13 @@ import {
   Factory,
   Users,
   Lock,
+  Home,
 } from 'lucide-react';
 import { MaterialItem, User, WorkSite, canManageUsers, canCreateOrEditMovements, isWorksiteLockedRole } from '../types';
 
 interface NavbarProps {
-  activeTab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users';
-  setActiveTab: (tab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users') => void;
+  activeTab: 'home' | 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users';
+  setActiveTab: (tab: 'home' | 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users') => void;
   materials: MaterialItem[];
   worksites?: WorkSite[];
   selectedWorksiteId: string;
@@ -362,6 +363,18 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Navigation Tabs */}
       <div className="bg-[#0A0A0B] border-t border-[#1F1F21] px-4 sm:px-6 lg:px-8">
         <nav className="max-w-7xl mx-auto flex gap-1 overflow-x-auto no-scrollbar text-sm font-medium">
+          <button
+            onClick={() => setActiveTab('home')}
+            className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
+              activeTab === 'home'
+                ? 'border-[#F2A30F] text-[#F2A30F] bg-[#151517]'
+                : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
+            }`}
+          >
+            <Home className="w-4 h-4 text-[#F2A30F]" />
+            Início (Home)
+          </button>
+
           <button
             onClick={() => setActiveTab('materials')}
             className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${

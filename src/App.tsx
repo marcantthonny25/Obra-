@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, doc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './lib/firebase';
 import { Navbar } from './components/Navbar';
+import { HomePage } from './components/HomePage';
 import { MaterialsView } from './components/MaterialsView';
 import { MovementsView } from './components/MovementsView';
 import { WorksitesView } from './components/WorksitesView';
@@ -21,7 +22,7 @@ import { INITIAL_USERS } from './data/initialUsers';
 const LOCAL_STORAGE_KEY_CURRENT_USER = 'hogar_current_user_v2';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users'>('materials');
+  const [activeTab, setActiveTab] = useState<'home' | 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users'>('home');
 
   // Real-time synced Firestore state
   const [users, setUsers] = useState<User[]>([]);
@@ -451,24 +452,33 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'materials' && (
-          <MaterialsView
-            materials={materials}
-            worksites={worksites}
+      {activeTab === 'home' ? (
+        <main className="flex-1 w-full p-0 m-0">
+          <HomePage
+            onNavigate={setActiveTab}
             currentUser={currentUser}
-            onOpenNewMaterial={() => {
-              setMaterialToEdit(null);
-              setIsMaterialFormOpen(true);
-            }}
-            onEditMaterial={(mat) => {
-              setMaterialToEdit(mat);
-              setIsMaterialFormOpen(true);
-            }}
-            onDeleteMaterial={handleDeleteMaterial}
-            onOpenQuickMovement={handleOpenQuickMovement}
+            onOpenAuthModal={() => setIsAuthModalOpen(true)}
           />
-        )}
+        </main>
+      ) : (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {activeTab === 'materials' && (
+            <MaterialsView
+              materials={materials}
+              worksites={worksites}
+              currentUser={currentUser}
+              onOpenNewMaterial={() => {
+                setMaterialToEdit(null);
+                setIsMaterialFormOpen(true);
+              }}
+              onEditMaterial={(mat) => {
+                setMaterialToEdit(mat);
+                setIsMaterialFormOpen(true);
+              }}
+              onDeleteMaterial={handleDeleteMaterial}
+              onOpenQuickMovement={handleOpenQuickMovement}
+            />
+          )}
 
         {activeTab === 'movements' && (
           <MovementsView
@@ -530,7 +540,8 @@ export default function App() {
             onSeedDemoData={handleSeedDemoData}
           />
         )}
-      </main>
+        </main>
+      )}
 
       {/* Mandatory First Access Password Change Modal */}
       {currentUser && currentUser.mustChangePassword && (
