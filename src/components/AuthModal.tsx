@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import heroBg from '../assets/images/hogar_home_hero_1785849335486.jpg';
 import {
   HardHat,
   Lock,
@@ -534,30 +535,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   );
 
   if (isGateMode) {
+    const bgUrl = heroBg || '/hogar-home-hero.jpg';
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-y-auto bg-black text-white select-none">
-        {/* Fullscreen Blurred Background Layer */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 lg:p-8 overflow-y-auto bg-black text-white select-none">
+        {/* Fullscreen Background Layer */}
         <div 
-          className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 opacity-60 pointer-events-none"
-          style={{ backgroundImage: "url('/hogar-home-hero.jpg')" }}
+          className="absolute inset-0 bg-cover bg-center opacity-70 filter blur-sm scale-105 pointer-events-none transition-all duration-700"
+          style={{ backgroundImage: `url(${bgUrl})` }}
         />
-        {/* Subtle Dark Overlay */}
-        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+        {/* Dark Vignette Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/40 pointer-events-none" />
 
-        {/* Content Container: Original Crisp Image on Left/Center, Small Login Card on Right */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-6 lg:gap-10 min-h-full py-4">
+        {/* Content Container: Original Crisp Image on Left/Center (md+), Small Login Card on Right */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center md:justify-between gap-6 md:gap-8 min-h-full py-4">
           
-          {/* Crisp Original Image in Foreground (Contain) */}
-          <div className="hidden lg:flex flex-1 items-center justify-center max-h-[85vh] p-2">
-            <img 
-              src="/hogar-home-hero.jpg" 
-              alt="Sistema Hogar" 
-              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/15 bg-black/20"
-            />
+          {/* Crisp Original Image in Foreground */}
+          <div className="hidden md:flex flex-1 items-center justify-center max-h-[85vh] p-2">
+            <div className="relative group overflow-hidden rounded-2xl shadow-2xl border border-white/15 bg-black/40 backdrop-blur-sm p-1.5">
+              <img 
+                src={bgUrl} 
+                alt="Hogar Empreendimentos - Gestão de Obras" 
+                className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-inner transition-transform duration-500 group-hover:scale-[1.01]"
+              />
+            </div>
           </div>
 
-          {/* Small Login Card on the Right */}
-          <div className="w-full sm:max-w-md lg:w-[400px] xl:w-[420px] shrink-0 bg-[#0F0F11]/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-[#222226] overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200 text-white">
+          {/* Login Card on the Right */}
+          <div className="w-full sm:max-w-md md:w-[400px] xl:w-[420px] shrink-0 bg-[#0F0F11]/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-[#222226] overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200 text-white">
             {cardInner}
           </div>
         </div>

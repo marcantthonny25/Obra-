@@ -1,4 +1,5 @@
 import React from 'react';
+import heroBg from '../assets/images/hogar_home_hero_1785849335486.jpg';
 import { Package, ArrowRight, Building2, ShieldCheck, Sparkles, LogIn } from 'lucide-react';
 import type { User } from '../types';
 
@@ -13,15 +14,15 @@ export const HomePage: React.FC<HomePageProps> = ({
   currentUser,
   onOpenAuthModal,
 }) => {
+  const bgUrl = heroBg || '/hogar-home-hero.jpg';
+
   return (
     <div 
-      className="relative w-full min-h-screen flex flex-col items-center justify-end bg-[#0B0B0C] overflow-hidden select-none"
+      className="relative w-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-end bg-[#0B0B0C] overflow-hidden select-none"
       style={{
-        backgroundImage: 'url(/hogar-home-hero.jpg)',
+        backgroundImage: `url(${bgUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        minHeight: '100vh',
-        width: '100vw',
       }}
     >
       {/* Semi-transparent dark overlay to ensure maximum legibility for text content and buttons */}
