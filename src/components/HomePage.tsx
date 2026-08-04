@@ -1,17 +1,19 @@
 import React from 'react';
-import { Package, ArrowRight, Building2, ShieldCheck, Sparkles, LogIn } from 'lucide-react';
+import { Package, ArrowRight, Building2, ShieldCheck, Sparkles, LogIn, UserCheck, RefreshCw } from 'lucide-react';
 import type { User } from '../types';
 
 interface HomePageProps {
   onNavigate: (tab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users') => void;
   currentUser: User | null;
   onOpenAuthModal: () => void;
+  onLogout?: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
   onNavigate,
   currentUser,
   onOpenAuthModal,
+  onLogout,
 }) => {
   return (
     <div className="relative w-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-[#0B0B0C] p-4 select-none">
@@ -33,13 +35,24 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
 
             {currentUser ? (
-              <div className="flex items-center gap-2 bg-[#151517] border border-[#222226] px-3.5 py-1.5 rounded-2xl">
-                <ShieldCheck className="w-4 h-4 text-[#F2A30F]" />
-                <div className="text-left text-xs">
-                  <span className="text-[#888888] text-[10px] block">Conectado como:</span>
-                  <span className="font-bold text-white">{currentUser.name}</span>
-                  <span className="text-emerald-400 font-semibold ml-1 text-[11px]">({currentUser.role})</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2 bg-[#151517] border border-[#222226] px-3 py-1.5 rounded-2xl">
+                  <ShieldCheck className="w-4 h-4 text-[#F2A30F]" />
+                  <div className="text-left text-xs">
+                    <span className="text-[#888888] text-[10px] block">Conectado como:</span>
+                    <span className="font-bold text-white">{currentUser.name}</span>
+                    <span className="text-emerald-400 font-semibold ml-1 text-[11px]">({currentUser.role})</span>
+                  </div>
                 </div>
+
+                <button
+                  onClick={onOpenAuthModal}
+                  className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
+                  title="Abrir tela de login / trocar de usuário"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Trocar Usuário</span>
+                </button>
               </div>
             ) : (
               <button
@@ -47,7 +60,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg transition-all active:scale-95 cursor-pointer shrink-0"
               >
                 <LogIn className="w-4 h-4" />
-                Acessar Minha Conta
+                Acessar Minha Conta / Login
               </button>
             )}
           </div>
