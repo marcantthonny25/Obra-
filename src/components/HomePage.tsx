@@ -1,5 +1,4 @@
 import React from 'react';
-import heroBg from '../assets/images/hogar_home_hero_1785849335486.jpg';
 import { Package, ArrowRight, Building2, ShieldCheck, Sparkles, LogIn } from 'lucide-react';
 import type { User } from '../types';
 
@@ -14,22 +13,10 @@ export const HomePage: React.FC<HomePageProps> = ({
   currentUser,
   onOpenAuthModal,
 }) => {
-  const bgUrl = heroBg || '/hogar-home-hero.jpg';
-
   return (
-    <div 
-      className="relative w-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-end bg-[#0B0B0C] overflow-hidden select-none"
-      style={{
-        backgroundImage: `url(${bgUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      {/* Semi-transparent dark overlay to ensure maximum legibility for text content and buttons */}
-      <div className="absolute inset-0 bg-black/35 backdrop-blur-[0.5px]" />
-
+    <div className="relative w-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-[#0B0B0C] p-4 select-none">
       {/* Main Interactive Floating Action Card */}
-      <div className="relative z-10 max-w-5xl w-full mx-auto px-4 sm:px-6 pb-12 pt-8 flex flex-col items-center justify-end text-center">
+      <div className="relative z-10 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col items-center justify-center text-center">
         {/* Floating System Action Bar at bottom center of screen */}
         <div className="w-full max-w-3xl bg-[#0F0F11]/90 backdrop-blur-md border border-emerald-500/30 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-500">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-[#222226] pb-4">
