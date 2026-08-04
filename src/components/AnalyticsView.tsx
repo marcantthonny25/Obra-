@@ -22,14 +22,17 @@ import {
   Building,
   CheckCircle,
   FileSpreadsheet,
+  Database,
 } from 'lucide-react';
-import { MaterialItem, StockMovement, WorkSite } from '../types';
+import { MaterialItem, StockMovement, WorkSite, User } from '../types';
 
 interface AnalyticsViewProps {
   materials: MaterialItem[];
   movements: StockMovement[];
   worksites: WorkSite[];
+  currentUser?: User | null;
   onImportBackupJSON: (data: { materials: MaterialItem[]; movements: StockMovement[]; worksites: WorkSite[] }) => void;
+  onSeedDemoData?: () => void;
 }
 
 const COLORS = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b', '#f43f5e'];
@@ -38,7 +41,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   materials,
   movements,
   worksites,
+  currentUser,
   onImportBackupJSON,
+  onSeedDemoData,
 }) => {
   const [printShoppingList, setPrintShoppingList] = useState(false);
 
@@ -148,6 +153,17 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             Restaurar
             <input type="file" accept=".json" onChange={handleImportBackup} className="hidden" />
           </label>
+
+          {(currentUser?.role === 'Administrador' || currentUser?.role?.toLowerCase() === 'admin') && onSeedDemoData && (
+            <button
+              onClick={onSeedDemoData}
+              className="px-3.5 py-2 border border-amber-500/30 bg-amber-950/20 rounded-xl text-amber-400 hover:text-amber-300 hover:bg-amber-900/30 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Apenas Administrador: Carga manual dos dados de demonstração iniciais"
+            >
+              <Database className="w-4 h-4 text-amber-400" />
+              Carregar Dados de Exemplo
+            </button>
+          )}
         </div>
       </div>
 

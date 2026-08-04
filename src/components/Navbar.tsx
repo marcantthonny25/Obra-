@@ -23,13 +23,17 @@ import {
   Wrench,
   Factory,
   Users,
+  Lock,
 } from 'lucide-react';
-import { MaterialItem, User, canManageUsers } from '../types';
+import { MaterialItem, User, WorkSite, canManageUsers, canCreateOrEditMovements, isWorksiteLockedRole } from '../types';
 
 interface NavbarProps {
   activeTab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users';
   setActiveTab: (tab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users') => void;
   materials: MaterialItem[];
+  worksites?: WorkSite[];
+  selectedWorksiteId: string;
+  onSelectWorksite: (worksiteId: string) => void;
   onOpenNewMovement: () => void;
   currentUser: User | null;
   users?: User[];
@@ -47,6 +51,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   materials,
+  worksites = [],
+  selectedWorksiteId,
+  onSelectWorksite,
   onOpenNewMovement,
   currentUser,
   users = [],
@@ -56,6 +63,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
+
+  const isLockedWorksite = currentUser ? isWorksiteLockedRole(currentUser.role) : false;
+  const canMove = currentUser ? canCreateOrEditMovements(currentUser.role) : true;
 
   // Logo state loaded from LocalStorage
   const [logoData, setLogoData] = useState<LogoData>(() => {
@@ -164,19 +174,54 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Hogar Empreendimentos
               </h1>
               <span className="bg-[#1F1F21] text-[#F2A30F] border border-[#333333] text-xs font-semibold px-2 py-0.5 rounded-full">
-                {currentUser ? `Catálogo: ${currentUser.name}` : 'Catálogo Privado'}
+                {currentUser ? `Perfil: ${currentUser.role}` : 'Gestão de Obras'}
               </span>
             </div>
-            <p className="text-xs text-[#888888]">Gestão de Materiais, Almoxarifado e Canteiros de Obras</p>
+            <p className="text-xs text-[#888888]">Gestão de Almoxarifados e Estoque Isolado por Obra</p>
           </div>
         </div>
 
-        {/* Stock KPI summary badges & User Badge */}
+        {/* Worksite Active Selector Bar + Stock KPI summary badges */}
         <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 md:pb-0 text-xs">
+          {/* Worksite Active Selector Control */}
+          {isLockedWorksite ? (
+            <div
+              className="bg-[#18181B] border border-amber-500/40 text-amber-300 px-3 py-1.5 rounded-xl flex items-center gap-2 shrink-0 shadow-sm"
+              title="Sua conta está vinculada exclusivamente a este canteiro de obras"
+            >
+              <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <div className="text-[11px] leading-tight">
+                <span className="text-[#888888] block text-[9px] uppercase font-bold">Obra Vinculada (Fixa)</span>
+                <span className="font-bold text-amber-300 truncate max-w-[150px] inline-block">
+                  {currentUser?.worksiteAssigned || 'Canteiro Restrito'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-[#151517] border border-[#222226] hover:border-[#F2A30F]/40 px-3 py-1 rounded-xl flex items-center gap-2 shrink-0 transition-colors">
+              <Building2 className="w-4 h-4 text-[#F2A30F] shrink-0" />
+              <div className="text-[11px]">
+                <span className="text-[#888888] block text-[9px] uppercase font-bold">Filtrar por Obra</span>
+                <select
+                  value={selectedWorksiteId}
+                  onChange={(e) => onSelectWorksite(e.target.value)}
+                  className="bg-transparent text-white font-bold text-xs outline-none cursor-pointer pr-1"
+                >
+                  <option value="ALL" className="bg-[#0F0F11] text-white">Todas as Obras (Visão Global)</option>
+                  {worksites.map((w) => (
+                    <option key={w.id} value={w.id} className="bg-[#0F0F11] text-white">
+                      {w.name} ({w.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
           <div className="bg-[#151517] border border-[#1F1F21] px-3.5 py-1.5 rounded-xl flex items-center gap-2.5 shrink-0">
             <Package className="w-4 h-4 text-blue-400" />
             <div>
-              <span className="text-[#666666] block text-[10px] uppercase tracking-wider font-medium">Total Insumos</span>
+              <span className="text-[#666666] block text-[10px] uppercase tracking-wider font-medium">Insumos</span>
               <span className="font-mono font-bold text-white text-xs">{materials.length} itens</span>
             </div>
           </div>
@@ -206,14 +251,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* New Movement CTA Button */}
-          <button
-            onClick={onOpenNewMovement}
-            className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span className="hidden sm:inline">Lançar</span> Movimentação
-          </button>
+          {/* New Movement CTA Button (Hidden or disabled if user role cannot execute movements) */}
+          {canMove && (
+            <button
+              onClick={onOpenNewMovement}
+              className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span className="hidden sm:inline">Lançar</span> Movimentação
+            </button>
+          )}
 
           {/* USER PROFILE / AUTH BUTTON */}
           <div className="relative shrink-0" ref={userMenuRef}>

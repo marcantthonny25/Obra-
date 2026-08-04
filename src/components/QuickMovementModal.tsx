@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle } from 'lucide-react';
-import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite } from '../types';
+import React, { useState, useEffect } from 'react';
+import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Lock } from 'lucide-react';
+import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite, User, isWorksiteLockedRole } from '../types';
 
 interface QuickMovementModalProps {
   isOpen: boolean;
@@ -10,6 +10,8 @@ interface QuickMovementModalProps {
   preSelectedMaterialId?: string;
   onAddMovement: (movement: Omit<StockMovement, 'id' | 'date'>, updatedUnitPrice?: number) => void;
   defaultResponsible?: string;
+  currentUser?: User | null;
+  selectedWorksiteId?: string;
 }
 
 const WORK_PHASES: WorkPhase[] = [
@@ -32,18 +34,40 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
   preSelectedMaterialId,
   onAddMovement,
   defaultResponsible = '',
+  currentUser,
+  selectedWorksiteId = 'ALL',
 }) => {
+  const isLocked = currentUser ? isWorksiteLockedRole(currentUser.role) : false;
+
   const [materialId, setMaterialId] = useState<string>(preSelectedMaterialId || (materials[0]?.id || ''));
   const [type, setType] = useState<MovementType>('SAIDA');
   const [quantity, setQuantity] = useState<string>('');
   const [unitPrice, setUnitPrice] = useState<string>('');
-  const [workSiteId, setWorkSiteId] = useState<string>(worksites[0]?.id || '');
+  const [workSiteId, setWorkSiteId] = useState<string>('');
   const [workPhase, setWorkPhase] = useState<WorkPhase>('Estrutura / Concretagem');
   const [invoiceNumber, setInvoiceNumber] = useState<string>('');
-  const [responsible, setResponsible] = useState<string>(defaultResponsible);
+  const [responsible, setResponsible] = useState<string>(defaultResponsible || currentUser?.name || '');
   const [notes, setNotes] = useState<string>('');
   const [itemDetail, setItemDetail] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
+
+  // Auto-set initial worksite
+  useEffect(() => {
+    if (isOpen) {
+      if (selectedWorksiteId && selectedWorksiteId !== 'ALL') {
+        setWorkSiteId(selectedWorksiteId);
+      } else if (currentUser && isWorksiteLockedRole(currentUser.role)) {
+        const matched = worksites.find(
+          (w) => w.id === currentUser.worksiteId || w.name.toLowerCase() === currentUser.worksiteAssigned?.toLowerCase()
+        );
+        if (matched) setWorkSiteId(matched.id);
+        else if (worksites[0]) setWorkSiteId(worksites[0].id);
+      } else if (worksites[0]) {
+        setWorkSiteId(worksites[0].id);
+      }
+      setResponsible(currentUser?.name || defaultResponsible || '');
+    }
+  }, [isOpen, selectedWorksiteId, currentUser, worksites]);
 
   const selectedMaterial = materials.find((m) => m.id === materialId);
 
@@ -317,13 +341,21 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
           {(type === 'SAIDA' || type === 'DEVOLUCAO') && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-[#151517] border border-[#F2A30F]/30 rounded-xl">
               <div>
-                <label className="block text-xs font-semibold text-[#F2A30F] mb-1">
-                  Canteiro / Obra de Destino *
+                <label className="block text-xs font-semibold text-[#F2A30F] mb-1 flex items-center justify-between">
+                  <span>Canteiro / Obra de Destino *</span>
+                  {isLocked && (
+                    <span className="text-[10px] text-amber-400 flex items-center gap-1 font-mono">
+                      <Lock className="w-3 h-3" /> Obra Fixa
+                    </span>
+                  )}
                 </label>
                 <select
                   value={workSiteId}
+                  disabled={isLocked}
                   onChange={(e) => setWorkSiteId(e.target.value)}
-                  className="w-full bg-[#0F0F11] border border-[#1F1F21] rounded-lg p-2 text-white text-xs focus:ring-2 focus:ring-[#F2A30F] outline-none"
+                  className={`w-full bg-[#0F0F11] border border-[#1F1F21] rounded-lg p-2 text-white text-xs outline-none ${
+                    isLocked ? 'opacity-80 cursor-not-allowed bg-[#18181B] text-amber-300 font-bold' : 'focus:ring-2 focus:ring-[#F2A30F]'
+                  }`}
                 >
                   {worksites.map((w) => (
                     <option key={w.id} value={w.id} className="bg-[#0F0F11] text-white">

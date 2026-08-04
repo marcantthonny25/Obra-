@@ -14,8 +14,10 @@ import {
   Edit2,
   Trash2,
   ShieldCheck,
+  Info,
+  Lock,
 } from 'lucide-react';
-import { StockMovement, WorkSite, isGlobalWorksiteRole } from '../types';
+import { StockMovement, WorkSite, canManageWorksites, isGlobalWorksiteRole, canCreateOrEditMovements } from '../types';
 import type { User } from '../types';
 
 interface WorksitesViewProps {
@@ -39,7 +41,9 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
 }) => {
   const [selectedWorksiteId, setSelectedWorksiteId] = useState<string | null>(null);
 
+  const isAdmin = canManageWorksites(currentUser?.role);
   const isGlobalUser = isGlobalWorksiteRole(currentUser?.role);
+  const canMove = canCreateOrEditMovements(currentUser?.role);
   const selectedWorksite = worksites.find((w) => w.id === selectedWorksiteId);
 
   // Filter movements for selected worksite
@@ -49,18 +53,30 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Global Access Role Banner */}
-      {isGlobalUser && (
+      {/* Notice Banner based on Role */}
+      {!isAdmin ? (
+        <div className="bg-amber-950/40 border border-amber-500/30 p-3.5 rounded-2xl text-amber-300 text-xs flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <Lock className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold text-white">Modo de Leitura / Consulta de Obras:</span> O seu perfil (
+              <span className="text-amber-400 font-semibold">{currentUser?.role || 'Visitante'}</span>) pode visualizar as obras, mas somente o <strong className="text-white">Administrador</strong> tem permissão para cadastrar, editar ou excluir canteiros.
+            </div>
+          </div>
+          <span className="bg-amber-900/60 border border-amber-500/40 font-mono text-[10px] font-bold px-2 py-1 rounded-lg shrink-0">
+            ADMIN APENAS
+          </span>
+        </div>
+      ) : (
         <div className="bg-emerald-950/40 border border-emerald-500/30 p-3.5 rounded-2xl text-emerald-300 text-xs flex items-center justify-between gap-3 shadow-sm">
           <div className="flex items-center gap-2.5">
             <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
             <div>
-              <span className="font-bold text-white">Gestão Centralizada de Obras:</span> Acesso concedido como{' '}
-              <span className="text-emerald-400 font-semibold">{currentUser?.role}</span> ({currentUser?.name}) para administrar todos os canteiros cadastrados na empresa.
+              <span className="font-bold text-white">Gestão Total de Obras (Administrador):</span> Acesso autorizativo completo para cadastrar, editar e gerenciar orçamentos de todos os canteiros.
             </div>
           </div>
           <span className="bg-emerald-900/60 border border-emerald-500/40 font-mono text-[10px] font-bold px-2 py-1 rounded-lg shrink-0">
-            VISÃO TOTAL
+            ADMINISTRADOR
           </span>
         </div>
       )}
@@ -76,13 +92,15 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onOpenNewWorksite}
-          className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-md active:scale-95 transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4 stroke-[3]" />
-          Cadastrar Nova Obra
-        </button>
+        {isAdmin && (
+          <button
+            onClick={onOpenNewWorksite}
+            className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-md active:scale-95 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            Cadastrar Nova Obra
+          </button>
+        )}
       </div>
 
       {/* Grid of Active Worksites */}
@@ -170,25 +188,29 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
               <div className="mt-4 pt-3 border-t border-[#1F1F21] flex items-center justify-between text-xs text-[#888888]">
                 <span>{siteMovCount} retiradas</span>
                 <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={() => onEditWorksite(site)}
-                    className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
-                    title="Editar Obra"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm(`Excluir a obra "${site.name}"?`)) {
-                        onDeleteWorksite(site.id);
-                        if (selectedWorksiteId === site.id) setSelectedWorksiteId(null);
-                      }
-                    }}
-                    className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
-                    title="Excluir Obra"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {isAdmin && (
+                    <>
+                      <button
+                        onClick={() => onEditWorksite(site)}
+                        className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
+                        title="Editar Obra (Administrador)"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Excluir a obra "${site.name}"?`)) {
+                            onDeleteWorksite(site.id);
+                            if (selectedWorksiteId === site.id) setSelectedWorksiteId(null);
+                          }
+                        }}
+                        className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                        title="Excluir Obra (Administrador)"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
                   <span className="text-[#F2A30F] font-bold hover:underline ml-1 text-[11px]">
                     {selectedWorksiteId === site.id ? 'Fechar' : 'Detalhes →'}
                   </span>
@@ -217,29 +239,35 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => onEditWorksite(selectedWorksite)}
-                className="bg-[#151517] border border-[#1F1F21] hover:bg-[#1F1F21] text-white font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <Edit2 className="w-3.5 h-3.5 text-[#F2A30F]" /> Editar
-              </button>
-              <button
-                onClick={() => {
-                  if (confirm(`Excluir a obra "${selectedWorksite.name}"?`)) {
-                    onDeleteWorksite(selectedWorksite.id);
-                    setSelectedWorksiteId(null);
-                  }
-                }}
-                className="bg-red-950/40 border border-red-500/30 hover:bg-red-900/50 text-red-400 font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Excluir
-              </button>
-              <button
-                onClick={onOpenQuickMovement}
-                className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5 stroke-[3]" /> Lançar Insumo nesta Obra
-              </button>
+              {isAdmin && (
+                <>
+                  <button
+                    onClick={() => onEditWorksite(selectedWorksite)}
+                    className="bg-[#151517] border border-[#1F1F21] hover:bg-[#1F1F21] text-white font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 text-[#F2A30F]" /> Editar Obra
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Excluir a obra "${selectedWorksite.name}"?`)) {
+                        onDeleteWorksite(selectedWorksite.id);
+                        setSelectedWorksiteId(null);
+                      }
+                    }}
+                    className="bg-red-950/40 border border-red-500/30 hover:bg-red-900/50 text-red-400 font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Excluir
+                  </button>
+                </>
+              )}
+              {canMove && (
+                <button
+                  onClick={onOpenQuickMovement}
+                  className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[3]" /> Lançar Insumo
+                </button>
+              )}
               <button
                 onClick={() => setSelectedWorksiteId(null)}
                 className="text-[#888888] hover:text-white p-1.5 rounded-lg hover:bg-[#151517] transition-colors cursor-pointer"

@@ -14,7 +14,7 @@ import { MaterialFormModal } from './components/MaterialFormModal';
 import { WorksiteFormModal } from './components/WorksiteFormModal';
 import { EditMovementModal } from './components/EditMovementModal';
 import { AuthModal } from './components/AuthModal';
-import { MaterialItem, StockMovement, WorkSite, User } from './types';
+import { MaterialItem, StockMovement, WorkSite, User, isWorksiteLockedRole, canManageWorksites } from './types';
 import { INITIAL_MATERIALS, INITIAL_MOVEMENTS, INITIAL_WORKSITES } from './data/initialData';
 import { INITIAL_USERS } from './data/initialUsers';
 
@@ -44,6 +44,8 @@ export default function App() {
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
+  const [selectedWorksiteId, setSelectedWorksiteId] = useState<string>('ALL');
+
   // Modals state
   const [isQuickMovementOpen, setIsQuickMovementOpen] = useState(false);
   const [preSelectedMaterialId, setPreSelectedMaterialId] = useState<string | undefined>(undefined);
@@ -57,56 +59,46 @@ export default function App() {
   const [isEditMovementOpen, setIsEditMovementOpen] = useState(false);
   const [movementToEdit, setMovementToEdit] = useState<StockMovement | null>(null);
 
-  // Firestore Real-Time Listeners & Auto-Seeding
+  // Auto-set & Lock Worksite upon login for Almoxarife / Mestre de Obras
   useEffect(() => {
-    const unsubscribeUsers = onSnapshot(collection(db, 'users'), async (snapshot) => {
-      if (snapshot.empty) {
-        // Seed initial users to Firestore
-        for (const u of INITIAL_USERS) {
-          await setDoc(doc(db, 'users', u.id), u);
+    if (currentUser && isWorksiteLockedRole(currentUser.role)) {
+      if (worksites.length > 0) {
+        const matched = worksites.find(
+          (w) =>
+            w.id === currentUser.worksiteId ||
+            w.name.toLowerCase() === currentUser.worksiteAssigned?.toLowerCase()
+        );
+        if (matched) {
+          setSelectedWorksiteId(matched.id);
+        } else if (worksites[0]) {
+          setSelectedWorksiteId(worksites[0].id);
         }
-      } else {
-        const fetchedUsers = snapshot.docs.map((docSnap) => docSnap.data() as User);
-        setUsers(fetchedUsers);
       }
+    }
+  }, [currentUser, worksites]);
+
+  // Firestore Real-Time Listeners (Manual creation only, no auto-seeding)
+  useEffect(() => {
+    const unsubscribeUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const fetchedUsers = snapshot.docs.map((docSnap) => docSnap.data() as User);
+      setUsers(fetchedUsers);
     });
 
-    const unsubscribeMaterials = onSnapshot(collection(db, 'materials'), async (snapshot) => {
-      if (snapshot.empty) {
-        // Seed initial materials to Firestore
-        for (const m of INITIAL_MATERIALS) {
-          await setDoc(doc(db, 'materials', m.id), m);
-        }
-      } else {
-        const fetchedMaterials = snapshot.docs.map((docSnap) => docSnap.data() as MaterialItem);
-        setMaterials(fetchedMaterials);
-      }
+    const unsubscribeMaterials = onSnapshot(collection(db, 'materials'), (snapshot) => {
+      const fetchedMaterials = snapshot.docs.map((docSnap) => docSnap.data() as MaterialItem);
+      setMaterials(fetchedMaterials);
     });
 
-    const unsubscribeMovements = onSnapshot(collection(db, 'movements'), async (snapshot) => {
-      if (snapshot.empty) {
-        // Seed initial movements to Firestore
-        for (const mov of INITIAL_MOVEMENTS) {
-          await setDoc(doc(db, 'movements', mov.id), mov);
-        }
-      } else {
-        const fetchedMovements = snapshot.docs.map((docSnap) => docSnap.data() as StockMovement);
-        // Sort movements newest first
-        fetchedMovements.sort((a, b) => b.id.localeCompare(a.id));
-        setMovements(fetchedMovements);
-      }
+    const unsubscribeMovements = onSnapshot(collection(db, 'movements'), (snapshot) => {
+      const fetchedMovements = snapshot.docs.map((docSnap) => docSnap.data() as StockMovement);
+      // Sort movements newest first
+      fetchedMovements.sort((a, b) => b.id.localeCompare(a.id));
+      setMovements(fetchedMovements);
     });
 
-    const unsubscribeWorksites = onSnapshot(collection(db, 'worksites'), async (snapshot) => {
-      if (snapshot.empty) {
-        // Seed initial worksites to Firestore
-        for (const w of INITIAL_WORKSITES) {
-          await setDoc(doc(db, 'worksites', w.id), w);
-        }
-      } else {
-        const fetchedWorksites = snapshot.docs.map((docSnap) => docSnap.data() as WorkSite);
-        setWorksites(fetchedWorksites);
-      }
+    const unsubscribeWorksites = onSnapshot(collection(db, 'worksites'), (snapshot) => {
+      const fetchedWorksites = snapshot.docs.map((docSnap) => docSnap.data() as WorkSite);
+      setWorksites(fetchedWorksites);
     });
 
     return () => {
@@ -116,6 +108,34 @@ export default function App() {
       unsubscribeWorksites();
     };
   }, []);
+
+  // Manual trigger to load demo data (Administrator only)
+  const handleSeedDemoData = async () => {
+    if (!currentUser || (currentUser.role !== 'Administrador' && currentUser.role?.toLowerCase() !== 'admin')) {
+      alert('Somente o Administrador pode executar essa ação.');
+      return;
+    }
+    if (confirm('Deseja carregar os dados de demonstração (usuários, insumos, movimentações e obras) no Firestore?')) {
+      try {
+        for (const u of INITIAL_USERS) {
+          await setDoc(doc(db, 'users', u.id), u);
+        }
+        for (const m of INITIAL_MATERIALS) {
+          await setDoc(doc(db, 'materials', m.id), m);
+        }
+        for (const mov of INITIAL_MOVEMENTS) {
+          await setDoc(doc(db, 'movements', mov.id), mov);
+        }
+        for (const w of INITIAL_WORKSITES) {
+          await setDoc(doc(db, 'worksites', w.id), w);
+        }
+        alert('Dados de demonstração carregados com sucesso no Firestore!');
+      } catch (err) {
+        console.error('Erro ao popular dados de demonstração:', err);
+        alert('Erro ao popular dados de demonstração no Firestore.');
+      }
+    }
+  };
 
   // Save current user to localStorage for browser session survival
   useEffect(() => {
@@ -419,6 +439,9 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         materials={materials}
+        worksites={worksites}
+        selectedWorksiteId={selectedWorksiteId}
+        onSelectWorksite={(id) => setSelectedWorksiteId(id)}
         onOpenNewMovement={() => handleOpenQuickMovement()}
         currentUser={currentUser}
         users={users}
@@ -490,7 +513,9 @@ export default function App() {
             materials={materials}
             movements={movements}
             worksites={worksites}
+            currentUser={currentUser}
             onImportBackupJSON={handleImportBackupJSON}
+            onSeedDemoData={handleSeedDemoData}
           />
         )}
 
@@ -502,6 +527,7 @@ export default function App() {
             onRegisterUser={handleRegisterUser}
             onUpdateUser={handleUpdateUser}
             onDeleteUser={handleDeleteUser}
+            onSeedDemoData={handleSeedDemoData}
           />
         )}
       </main>
@@ -530,6 +556,8 @@ export default function App() {
         preSelectedMaterialId={preSelectedMaterialId}
         onAddMovement={handleAddMovement}
         defaultResponsible={currentUser?.name || ''}
+        currentUser={currentUser}
+        selectedWorksiteId={selectedWorksiteId}
       />
 
       {/* Edit Movement Modal */}

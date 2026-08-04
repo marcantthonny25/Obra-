@@ -41,6 +41,8 @@ export interface MaterialItem {
   batchNumber?: string;
   lastUpdated: string;
   notes?: string;
+  workSiteId?: string;
+  workSiteName?: string;
 }
 
 export interface StockMovement {
@@ -59,6 +61,29 @@ export interface StockMovement {
   workPhase?: WorkPhase;
   invoiceNumber?: string; // NF-e / Romaneio
   responsible: string; // Nome do almoxarife ou mestre de obras
+  notes?: string;
+}
+
+export interface MaterialRequisitionItem {
+  materialId?: string;
+  materialName: string;
+  quantity: number;
+  unit: string;
+  notes?: string;
+}
+
+export interface MaterialRequisition {
+  id: string;
+  code: string;
+  date: string;
+  workSiteId: string;
+  workSiteName: string;
+  requesterName: string;
+  requesterRole: string;
+  workPhase?: WorkPhase;
+  items: MaterialRequisitionItem[];
+  status: 'Pendente' | 'Aprovado' | 'Em Cotação' | 'Atendido' | 'Cancelado';
+  priority: 'Alta' | 'Média' | 'Baixa';
   notes?: string;
 }
 
@@ -135,21 +160,18 @@ export type UserRole =
 
 export type UserStatus = 'ATIVO' | 'INATIVO';
 
-export const isGlobalWorksiteRole = (role?: string): boolean => {
+// Role Permission Helpers
+
+export const canManageWorksites = (role?: string): boolean => {
   if (!role) return false;
-  const normalized = role.toLowerCase().trim();
-  return (
-    normalized.includes('coordenador') ||
-    normalized.includes('engenheiro') ||
-    normalized.includes('engenheira') ||
-    normalized.includes('admin') ||
-    normalized.includes('gerente')
-  );
+  const norm = role.toLowerCase().trim();
+  return norm === 'administrador' || norm === 'admin';
 };
 
 export const canManageUsers = (role?: string): boolean => {
   if (!role) return false;
-  return role.toLowerCase().trim() === 'administrador' || role.toLowerCase().trim() === 'admin';
+  const norm = role.toLowerCase().trim();
+  return norm === 'administrador' || norm === 'admin';
 };
 
 export const canCreateOrEditMovements = (role?: string): boolean => {
@@ -162,8 +184,55 @@ export const canCreateOrEditMovements = (role?: string): boolean => {
 export const canCreateOrEditCatalog = (role?: string): boolean => {
   if (!role) return false;
   const norm = role.toLowerCase().trim();
-  // Administrador, Almoxarife can edit catalog
+  // Administrador and Almoxarife can edit catalog
   return norm === 'administrador' || norm === 'admin' || norm.includes('almoxarife');
+};
+
+export const canCreateRequisitions = (role?: string): boolean => {
+  if (!role) return false;
+  const norm = role.toLowerCase().trim();
+  return (
+    norm === 'administrador' ||
+    norm === 'admin' ||
+    norm.includes('mestre') ||
+    norm.includes('almoxarife') ||
+    norm.includes('gerente')
+  );
+};
+
+export const canManagePurchases = (role?: string): boolean => {
+  if (!role) return false;
+  const norm = role.toLowerCase().trim();
+  return norm === 'administrador' || norm === 'admin' || norm.includes('gerente');
+};
+
+export const isReadOnlyRole = (role?: string): boolean => {
+  if (!role) return false;
+  const norm = role.toLowerCase().trim();
+  return (
+    norm.includes('engenheiro') ||
+    norm.includes('engenheira') ||
+    norm.includes('coordenador')
+  );
+};
+
+export const isWorksiteLockedRole = (role?: string): boolean => {
+  if (!role) return false;
+  const norm = role.toLowerCase().trim();
+  return norm.includes('almoxarife') || norm.includes('mestre');
+};
+
+export const isGlobalWorksiteRole = (role?: string): boolean => {
+  if (!role) return false;
+  const norm = role.toLowerCase().trim();
+  return (
+    norm.includes('coordenador') ||
+    norm.includes('engenheiro') ||
+    norm.includes('engenheira') ||
+    norm === 'administrador' ||
+    norm === 'admin' ||
+    norm.includes('gerente')
+  );
 };
 
 export interface User {
@@ -178,6 +247,8 @@ export interface User {
   createdAt: string;
   lastLogin?: string;
   worksiteAssigned?: string;
+  worksiteId?: string;
   worksitesAllowed?: string[];
 }
+
 

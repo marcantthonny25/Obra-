@@ -2,7 +2,7 @@
   "entities": {
     "users": {
       "title": "Users",
-      "description": "User accounts for authentication and permissions",
+      "description": "User accounts for authentication, roles and assigned worksite",
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
@@ -10,6 +10,7 @@
         "password": { "type": "string" },
         "role": { "type": "string" },
         "worksiteAssigned": { "type": "string" },
+        "worksiteId": { "type": "string" },
         "createdAt": { "type": "string" }
       },
       "required": ["id", "name", "email", "role"]
@@ -29,13 +30,15 @@
         "location": { "type": "string" },
         "supplier": { "type": "string" },
         "lastUpdate": { "type": "string" },
-        "notes": { "type": "string" }
+        "notes": { "type": "string" },
+        "workSiteId": { "type": "string" },
+        "workSiteName": { "type": "string" }
       },
       "required": ["id", "name", "quantity", "unit"]
     },
     "movements": {
       "title": "Movements",
-      "description": "Inbound and outbound stock movements",
+      "description": "Inbound and outbound stock movements for specific worksites",
       "properties": {
         "id": { "type": "string" },
         "date": { "type": "string" },
@@ -45,8 +48,8 @@
         "materialName": { "type": "string" },
         "quantity": { "type": "number" },
         "unit": { "type": "string" },
-        "worksiteId": { "type": "string" },
-        "worksiteName": { "type": "string" },
+        "workSiteId": { "type": "string" },
+        "workSiteName": { "type": "string" },
         "requester": { "type": "string" },
         "responsible": { "type": "string" },
         "notes": { "type": "string" },
@@ -64,12 +67,30 @@
         "name": { "type": "string" },
         "code": { "type": "string" },
         "address": { "type": "string" },
-        "engineer": { "type": "string" },
+        "engineerInCharge": { "type": "string" },
         "status": { "type": "string" },
-        "budget": { "type": "number" },
-        "budgetSpent": { "type": "number" }
+        "budgetMaterials": { "type": "number" },
+        "totalSpentMaterials": { "type": "number" },
+        "startDate": { "type": "string" }
       },
       "required": ["id", "name", "code"]
+    },
+    "requisitions": {
+      "title": "Requisitions",
+      "description": "Material requisitions created by Mestres de Obra or Almoxarifes",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "date": { "type": "string" },
+        "workSiteId": { "type": "string" },
+        "workSiteName": { "type": "string" },
+        "requesterName": { "type": "string" },
+        "requesterRole": { "type": "string" },
+        "status": { "type": "string" },
+        "priority": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "code", "workSiteId", "requesterName"]
     }
   }
 }

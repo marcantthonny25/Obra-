@@ -8,6 +8,12 @@ service cloud.firestore {
       allow create, update, delete: if true;
     }
 
+    // Worksites / Canteiros de Obras Collection (Only admin manages)
+    match /worksites/{worksiteId} {
+      allow read: if true;
+      allow create, update, delete: if true;
+    }
+
     // Materials / Stock Catalog Collection
     match /materials/{materialId} {
       allow read: if true;
@@ -20,10 +26,11 @@ service cloud.firestore {
       allow create, update, delete: if true;
     }
 
-    // Worksites / Canteiros de Obras Collection
-    match /worksites/{worksiteId} {
+    // Requisitions Collection (Requisições de Materiais)
+    match /requisitions/{requisitionId} {
       allow read: if true;
       allow create, update, delete: if true;
     }
   }
 }
+

@@ -17,6 +17,7 @@ import {
   AlertCircle,
   X,
   BadgeAlert,
+  Database,
 } from 'lucide-react';
 import { User, UserRole, UserStatus, WorkSite } from '../types';
 
@@ -27,6 +28,7 @@ interface UsersManagementViewProps {
   onRegisterUser: (newUser: User) => void;
   onUpdateUser: (updatedUser: User) => void;
   onDeleteUser: (userId: string) => void;
+  onSeedDemoData?: () => void;
 }
 
 const ROLES_LIST: { role: UserRole; desc: string }[] = [
@@ -46,6 +48,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
   onRegisterUser,
   onUpdateUser,
   onDeleteUser,
+  onSeedDemoData,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -109,7 +112,24 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
       return;
     }
 
+    const isRestrictedRole =
+      formRole === 'Almoxarife' ||
+      formRole === 'Mestre de Obras' ||
+      formRole.toLowerCase().includes('almoxarife') ||
+      formRole.toLowerCase().includes('mestre');
+
+    if (isRestrictedRole && (!formWorksite || formWorksite === 'Todas as Obras')) {
+      setFeedback({
+        type: 'error',
+        msg: `Para o cargo de ${formRole}, é OBRIGATÓRIO selecionar uma obra específica para vinculação no Firestore.`,
+      });
+      return;
+    }
+
     const cleanEmail = formEmail.trim().toLowerCase();
+    const matchedWorksite = worksites.find(
+      (w) => w.name === formWorksite || w.id === formWorksite
+    );
 
     if (!editingUser) {
       // Check duplicate
@@ -133,6 +153,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
         mustChangePassword: formMustChangePass,
         createdAt: new Date().toISOString(),
         worksiteAssigned: formWorksite,
+        worksiteId: matchedWorksite?.id,
       };
 
       onRegisterUser(newUser);
@@ -147,6 +168,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
         role: formRole,
         status: formStatus,
         worksiteAssigned: formWorksite,
+        worksiteId: matchedWorksite?.id,
         mustChangePassword: formMustChangePass,
       };
 
@@ -211,13 +233,25 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
             </span>
           </div>
         </div>
-        <button
-          onClick={handleOpenCreate}
-          className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition-all shrink-0 cursor-pointer"
-        >
-          <UserPlus className="w-4 h-4" />
-          Novo Usuário
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {(currentUser?.role === 'Administrador' || currentUser?.role?.toLowerCase() === 'admin') && onSeedDemoData && (
+            <button
+              onClick={onSeedDemoData}
+              className="bg-[#151517] hover:bg-[#1F1F21] text-amber-400 border border-amber-500/30 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+              title="Carga manual dos dados de demonstração iniciais"
+            >
+              <Database className="w-4 h-4 text-amber-400" />
+              Carregar Dados de Exemplo
+            </button>
+          )}
+          <button
+            onClick={handleOpenCreate}
+            className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" />
+            Novo Usuário
+          </button>
+        </div>
       </div>
 
       {/* Header & Controls */}
@@ -549,19 +583,32 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-[#A0A0A0] font-medium mb-1">Obra Alocada (Restrição do Almoxarife/Mestre)</label>
+                <label className="block text-[#A0A0A0] font-medium mb-1">
+                  Obra Vinculada {formRole === 'Almoxarife' || formRole === 'Mestre de Obras' ? '(OBRIGATÓRIO *)' : '(Opcional)'}
+                </label>
                 <select
                   value={formWorksite}
                   onChange={(e) => setFormWorksite(e.target.value)}
-                  className="w-full bg-[#151517] border border-[#222226] rounded-xl p-2.5 text-white focus:ring-1 focus:ring-[#F2A30F] outline-none"
+                  className={`w-full bg-[#151517] border rounded-xl p-2.5 text-white outline-none ${
+                    (formRole === 'Almoxarife' || formRole === 'Mestre de Obras') && (!formWorksite || formWorksite === 'Todas as Obras')
+                      ? 'border-amber-500 focus:ring-1 focus:ring-amber-500'
+                      : 'border-[#222226] focus:ring-1 focus:ring-[#F2A30F]'
+                  }`}
                 >
-                  <option value="Todas as Obras">Todas as Obras (Acesso Global)</option>
+                  {formRole !== 'Almoxarife' && formRole !== 'Mestre de Obras' && (
+                    <option value="Todas as Obras">Todas as Obras (Acesso Global / Sem Restrição)</option>
+                  )}
                   {worksites.map((w) => (
                     <option key={w.id} value={w.name}>
                       {w.name} ({w.code})
                     </option>
                   ))}
                 </select>
+                {(formRole === 'Almoxarife' || formRole === 'Mestre de Obras') && (
+                  <p className="text-[11px] text-amber-400 mt-1">
+                    * O cargo de {formRole} exige vinculação obrigatória a um canteiro de obras específico.
+                  </p>
+                )}
               </div>
 
               <div className="pt-1">
