@@ -166,29 +166,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setResetEmailSent(true);
   };
 
-  return (
-    <div 
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto ${
-        isGateMode
-          ? 'bg-cover bg-center bg-no-repeat'
-          : 'bg-black/80 backdrop-blur-md'
-      }`}
-      style={
-        isGateMode
-          ? {
-              backgroundImage: "url('/hogar-home-hero.jpg')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }
-          : undefined
-      }
-    >
-      {/* Camada escura com no máximo 30% de opacidade quando em tela cheia (GateMode) */}
-      {isGateMode && <div className="absolute inset-0 bg-black/30 pointer-events-none" />}
-
-      <div className="relative z-10 bg-[#0F0F11]/90 backdrop-blur-md rounded-3xl shadow-2xl border border-[#222226] w-full max-w-md sm:max-w-xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200 text-white">
-        {/* Header Header */}
-        <div className="bg-[#151517] border-b border-[#222226] p-6 text-center relative">
+  const cardInner = (
+    <>
+      {/* Header Header */}
+      <div className="bg-[#151517] border-b border-[#222226] p-6 text-center relative">
           {!isGateMode && onClose && (
             <button
               onClick={onClose}
@@ -544,11 +525,50 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
         </div>
 
-        {/* Footer Security badge */}
-        <div className="bg-[#09090A] border-t border-[#222226] px-6 py-3.5 text-center flex items-center justify-center gap-2 text-[11px] text-[#777777]">
-          <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-          <span>Sessão segura criptografada com controle de acesso corporativo</span>
+      {/* Footer Security badge */}
+      <div className="bg-[#09090A] border-t border-[#222226] px-6 py-3.5 text-center flex items-center justify-center gap-2 text-[11px] text-[#777777]">
+        <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+        <span>Sessão segura criptografada com controle de acesso corporativo</span>
+      </div>
+    </>
+  );
+
+  if (isGateMode) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-y-auto bg-black text-white select-none">
+        {/* Fullscreen Blurred Background Layer */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 opacity-60 pointer-events-none"
+          style={{ backgroundImage: "url('/hogar-home-hero.jpg')" }}
+        />
+        {/* Subtle Dark Overlay */}
+        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+
+        {/* Content Container: Original Crisp Image on Left/Center, Small Login Card on Right */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-6 lg:gap-10 min-h-full py-4">
+          
+          {/* Crisp Original Image in Foreground (Contain) */}
+          <div className="hidden lg:flex flex-1 items-center justify-center max-h-[85vh] p-2">
+            <img 
+              src="/hogar-home-hero.jpg" 
+              alt="Sistema Hogar" 
+              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/15 bg-black/20"
+            />
+          </div>
+
+          {/* Small Login Card on the Right */}
+          <div className="w-full sm:max-w-md lg:w-[400px] xl:w-[420px] shrink-0 bg-[#0F0F11]/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-[#222226] overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200 text-white">
+            {cardInner}
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto bg-black/80 backdrop-blur-md">
+      <div className="relative z-10 bg-[#0F0F11]/95 backdrop-blur-md rounded-3xl shadow-2xl border border-[#222226] w-full max-w-md sm:max-w-xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200 text-white">
+        {cardInner}
       </div>
     </div>
   );
