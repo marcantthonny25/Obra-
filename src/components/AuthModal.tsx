@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-//import heroBg from '../assets/images/hogar_home_hero_1785849335486.jpg';
+import heroBg from '../assets/images/hogar_home_hero_1785849335486.jpg';
 import {
   HardHat,
   Lock,
