@@ -433,6 +433,20 @@ export default function App() {
     }
   };
 
+  // Unauthenticated Guard: Render ONLY full-screen Login view without any background dashboard, navbar, or footer
+  if (!currentUser) {
+    return (
+      <AuthModal
+        isOpen={true}
+        users={users}
+        onLoginSuccess={handleLoginSuccess}
+        onRegisterUser={handleRegisterUser}
+        onDeleteUser={handleDeleteUser}
+        isGateMode={true}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0B] font-sans text-[#E0E0E0] flex flex-col antialiased selection:bg-[#F2A30F] selection:text-black">
       {/* Navigation Top Header */}
@@ -600,15 +614,17 @@ export default function App() {
       />
 
       {/* Auth / Login Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen || !currentUser}
-        onClose={() => setIsAuthModalOpen(false)}
-        users={users}
-        onLoginSuccess={handleLoginSuccess}
-        onRegisterUser={handleRegisterUser}
-        onDeleteUser={handleDeleteUser}
-        isGateMode={!currentUser}
-      />
+      {isAuthModalOpen && (
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          users={users}
+          onLoginSuccess={handleLoginSuccess}
+          onRegisterUser={handleRegisterUser}
+          onDeleteUser={handleDeleteUser}
+          isGateMode={false}
+        />
+      )}
 
 
       {/* Footer */}

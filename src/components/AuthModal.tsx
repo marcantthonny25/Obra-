@@ -168,15 +168,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto bg-cover bg-center bg-no-repeat"
-      style={{
-        backgroundImage: "url('/hogar-home-hero.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto ${
+        isGateMode
+          ? 'bg-cover bg-center bg-no-repeat'
+          : 'bg-black/80 backdrop-blur-md'
+      }`}
+      style={
+        isGateMode
+          ? {
+              backgroundImage: "url('/hogar-home-hero.jpg')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }
+          : undefined
+      }
     >
-      {/* Camada escura com no máximo 30% de opacidade */}
-      <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+      {/* Camada escura com no máximo 30% de opacidade quando em tela cheia (GateMode) */}
+      {isGateMode && <div className="absolute inset-0 bg-black/30 pointer-events-none" />}
 
       <div className="relative z-10 bg-[#0F0F11]/90 backdrop-blur-md rounded-3xl shadow-2xl border border-[#222226] w-full max-w-md sm:max-w-xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200 text-white">
         {/* Header Header */}
