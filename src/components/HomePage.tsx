@@ -17,7 +17,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     <div 
       className="relative w-full min-h-screen flex flex-col items-center justify-end bg-[#0B0B0C] overflow-hidden select-none"
       style={{
-        backgroundImage: 'url(/hogar_home_hero.jpg)',
+        backgroundImage: 'url(/hogar-home-hero.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         minHeight: '100vh',
