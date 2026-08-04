@@ -181,18 +181,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </button>
           )}
 
-          <div className="inline-flex items-center justify-center p-3.5 bg-[#F2A30F]/15 border border-[#F2A30F]/30 rounded-2xl mb-3">
-            <HardHat className="w-8 h-8 text-[#F2A30F]" />
+          <div className="w-14 h-14 rounded-full bg-emerald-600 border border-emerald-400/30 flex items-center justify-center mx-auto mb-3.5 shadow-lg shadow-emerald-950/50">
+            <HardHat className="w-7 h-7 text-white stroke-[1.75]" />
           </div>
 
-          <span className="text-xs font-bold uppercase tracking-widest text-[#F2A30F] block mb-1">
-            Controle de Estoque
-          </span>
           <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center justify-center gap-1.5 text-emerald-400">
             Hogar Empreendimentos
           </h2>
-          <p className="text-xs text-[#888888] mt-1.5 max-w-sm mx-auto">
-            Sistema de Gestão de Insumos, Movimentações e Canteiros de Obras
+          <p className="text-xs sm:text-sm text-[#A0A0A0] mt-2 max-w-sm mx-auto leading-relaxed">
+            Sistema Inteligente de Gestão de Obras, Insumos e Movimentações
           </p>
 
           {/* Tab Switcher */}
