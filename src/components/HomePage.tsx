@@ -14,22 +14,21 @@ export const HomePage: React.FC<HomePageProps> = ({
   onOpenAuthModal,
 }) => {
   return (
-    <div className="relative w-full min-h-[calc(100vh-112px)] flex flex-col items-center justify-center bg-[#0B0B0C] overflow-hidden select-none">
-      {/* Background Hero Image with 16:9 aspect ratio and background-size: cover */}
-      <div 
-        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-all duration-700 filter brightness-95"
-        style={{ 
-          backgroundImage: `url('/hogar_home_hero.jpg')`,
-          backgroundPosition: 'center center',
-          backgroundSize: 'cover'
-        }}
-      >
-        {/* Subtle Vignette & Gradient overlay for subtle contrast without obscuring text */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 backdrop-blur-[0.5px]" />
-      </div>
+    <div 
+      className="relative w-full min-h-screen flex flex-col items-center justify-end bg-[#0B0B0C] overflow-hidden select-none"
+      style={{
+        backgroundImage: 'url(/hogar_home_hero.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        minHeight: '100vh',
+        width: '100vw',
+      }}
+    >
+      {/* Semi-transparent dark overlay to ensure maximum legibility for text content and buttons */}
+      <div className="absolute inset-0 bg-black/35 backdrop-blur-[0.5px]" />
 
       {/* Main Interactive Floating Action Card */}
-      <div className="relative z-10 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col items-center justify-end text-center min-h-[75vh] sm:min-h-[80vh]">
+      <div className="relative z-10 max-w-5xl w-full mx-auto px-4 sm:px-6 pb-12 pt-8 flex flex-col items-center justify-end text-center">
         {/* Floating System Action Bar at bottom center of screen */}
         <div className="w-full max-w-3xl bg-[#0F0F11]/90 backdrop-blur-md border border-emerald-500/30 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-500">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-[#222226] pb-4">
