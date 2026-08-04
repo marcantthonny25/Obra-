@@ -550,12 +550,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center md:justify-between gap-6 md:gap-8 min-h-full py-4">
           
           {/* Crisp Original Image in Foreground */}
-          <div className="hidden md:flex flex-1 items-center justify-center max-h-[85vh] p-2">
+          <div className="hidden md:flex flex-1 items-center justify-center max-h-[92vh] p-2">
             <div className="relative group overflow-hidden rounded-2xl shadow-2xl border border-white/15 bg-black/40 backdrop-blur-sm p-1.5">
               <img 
                 src={bgUrl} 
                 alt="Hogar Empreendimentos - Gestão de Obras" 
-                className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-inner transition-transform duration-500 group-hover:scale-[1.01]"
+                className="max-w-full max-h-[83vh] object-contain rounded-xl shadow-inner transition-transform duration-500 group-hover:scale-[1.01]"
               />
             </div>
           </div>
