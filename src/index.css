@@ -9,8 +9,8 @@
 
   html.light-mode,
   [data-theme="light"] {
-    --bg-main: #F6F8FA;
-    --text-main: #1F2328;
+    --bg-main: #F5F7FA;
+    --text-main: #1F2937;
     --color-scheme: light;
   }
 
@@ -23,27 +23,29 @@
 }
 
 /* ==========================================================================
-   HOGAR EMPREENDIMENTOS - ELEGANT CORPORATE LIGHT THEME SYSTEM
+   HOGAR EMPREENDIMENTOS - NOTION/LINEAR INSPIRED CORPORATE LIGHT THEME SYSTEM
    ========================================================================== */
 
-/* 1. Page Canvas & Layout Containers (#F6F8FA) */
+/* 1. App Canvas & Main Background (#F5F7FA) */
 html.light-mode body,
 html.light-mode #root,
+html.light-mode .min-h-screen,
 html.light-mode .min-h-\[calc\(100vh-80px\)\] {
-  background-color: #F6F8FA !important;
-  color: #1F2328 !important;
+  background-color: #F5F7FA !important;
+  color: #1F2937 !important;
 }
 
-/* 2. Top Navigation Bar & Sub-Header Wrappers */
+/* 2. Top Header Navigation Bar */
 html.light-mode header,
-html.light-mode .bg-\[\#0A0A0B\] {
+html.light-mode .bg-\[\#0A0A0B\],
+html.light-mode .bg-\[\#0B0B0C\] {
   background-color: #FFFFFF !important;
-  color: #1F2328 !important;
-  border-color: #E5E7EB !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+  color: #1F2937 !important;
+  border-color: #E6E8EB !important;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.03) !important;
 }
 
-/* 3. Primary Cards & Elevated Surfaces (#FFFFFF with #E5E7EB borders & soft multi-layer shadows) */
+/* 3. Cards & Elevated Surface Containers (#FFFFFF, #E6E8EB border, 0 6px 18px rgba(0,0,0,0.05) shadow) */
 html.light-mode .bg-\[\#111113\],
 html.light-mode .bg-\[\#151517\],
 html.light-mode .bg-\[\#141417\],
@@ -55,17 +57,18 @@ html.light-mode .bg-\[\#1F1F24\],
 html.light-mode .bg-\[\#25252B\],
 html.light-mode .bg-\[\#0F0F11\] {
   background-color: #FFFFFF !important;
-  color: #1F2328 !important;
-  border-color: #E5E7EB !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02) !important;
+  color: #1F2937 !important;
+  border-color: #E6E8EB !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* 4. Secondary Containers, Nested Cards & Soft Inset Panels */
+/* 4. Secondary Containers, Inset Panels & Nested Boxes */
 html.light-mode .bg-\[\#121215\],
 html.light-mode .bg-\[\#131316\],
 html.light-mode .bg-\[\#1D1D22\] {
   background-color: #F8FAFC !important;
-  border-color: #E5E7EB !important;
+  border-color: #E6E8EB !important;
+  box-shadow: none !important;
 }
 
 /* 5. Hover Effects & Interactive Surface States */
@@ -79,7 +82,7 @@ html.light-mode .hover\:bg-\[\#2B2B30\]:hover {
   border-color: #D1D5DB !important;
 }
 
-/* 6. Navigation Tabs & Active State Highlight (Institutional Emerald) */
+/* 6. Navigation Tabs & Active Tab Highlight (Institutional Emerald) */
 html.light-mode .bg-\[\#151517\].border-emerald-400,
 html.light-mode .border-emerald-500\/30 {
   border-color: #059669 !important;
@@ -91,18 +94,18 @@ html.light-mode nav button.bg-\[\#151517\] {
   border-color: #10B981 !important;
 }
 
-/* 7. Hero Banners & AI Assistant Cards (White card with subtle emerald gradient overlay) */
+/* 7. Hero Banners & AI Assistant Panels (White Card with Subtle Emerald Gradient Overlay) */
 html.light-mode .bg-gradient-to-r.from-\[\#0F0F11\].via-\[\#151517\].to-\[\#1a1815\],
 html.light-mode .bg-gradient-to-r.from-\[\#0F1D16\].via-\[\#0F0F11\].to-\[\#0A120D\],
 html.light-mode .bg-gradient-to-r.from-\[\#0F1D16\].to-\[\#141417\],
 html.light-mode .bg-gradient-to-br.from-\[\#151517\].to-\[\#0F0F11\] {
-  background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 50%, #F0FDF4 100%) !important;
+  background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 60%, #F0FDF4 100%) !important;
   border-color: #A7F3D0 !important;
-  color: #1F2328 !important;
-  box-shadow: 0 4px 12px -2px rgba(5, 150, 105, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+  color: #1F2937 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* 8. Structural Borders (#E5E7EB) */
+/* 8. Structural Borders (#E6E8EB) */
 html.light-mode .border-\[\#1F1F21\],
 html.light-mode .border-\[\#222226\],
 html.light-mode .border-\[\#26262A\],
@@ -110,12 +113,12 @@ html.light-mode .border-\[\#333333\],
 html.light-mode .border-\[\#1F1F24\],
 html.light-mode .border-\[\#2B2B30\],
 html.light-mode .border-\[\#2A2A2F\] {
-  border-color: #E5E7EB !important;
+  border-color: #E6E8EB !important;
 }
 
-/* 9. Typography & High-Contrast Readability */
+/* 9. Typography Hierarchy & Contrast (#1F2937 primary, #6B7280 secondary) */
 html.light-mode .text-white {
-  color: #0F172A !important;
+  color: #1F2937 !important;
 }
 
 html.light-mode .text-\[\#E0E0E0\],
@@ -123,7 +126,7 @@ html.light-mode .text-\[\#D0D0D0\],
 html.light-mode .text-\[\#CCCCCC\],
 html.light-mode .text-\[\#AAAAAA\],
 html.light-mode .text-\[\#A0A0A0\] {
-  color: #334155 !important;
+  color: #374151 !important;
 }
 
 html.light-mode .text-\[\#888888\],
@@ -131,10 +134,10 @@ html.light-mode .text-\[\#9E9E9E\],
 html.light-mode .text-\[\#777777\],
 html.light-mode .text-\[\#666666\],
 html.light-mode .text-\[\#808080\] {
-  color: #64748B !important;
+  color: #6B7280 !important;
 }
 
-/* 10. Institutional Emerald Accent Highlights & Statuses */
+/* 10. Institutional Emerald Accent Highlights & Active Indicators */
 html.light-mode .text-emerald-400,
 html.light-mode .text-emerald-500 {
   color: #059669 !important;
@@ -151,7 +154,7 @@ html.light-mode .hover\:bg-emerald-600:hover {
   background-color: #047857 !important;
 }
 
-/* 11. Primary Action Buttons (Hogar Amber #F2A30F) & Secondary Buttons */
+/* 11. Hogar Amber Primary CTAs (#F2A30F) & Secondary Buttons */
 html.light-mode .bg-\[\#F2A30F\],
 html.light-mode .bg-amber-500 {
   background-color: #F2A30F !important;
@@ -169,14 +172,21 @@ html.light-mode .bg-\[\#2B2B30\] {
   border-color: #E2E8F0 !important;
 }
 
-/* 12. Form Controls (Refined #FAFAFA inputs with crisp #D1D5DB borders & emerald glow) */
+/* 12. Form Controls (Inputs, Selects, Textareas: #FAFAFA background, #DADDE2 border, hover #FFFFFF, focus emerald) */
 html.light-mode input:not([type="checkbox"]):not([type="radio"]),
 html.light-mode select,
 html.light-mode textarea {
   background-color: #FAFAFA !important;
-  color: #0F172A !important;
-  border-color: #CBD5E1 !important;
+  color: #1F2937 !important;
+  border: 1px solid #DADDE2 !important;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+}
+
+html.light-mode input:not([type="checkbox"]):not([type="radio"]):hover,
+html.light-mode select:hover,
+html.light-mode textarea:hover {
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
 }
 
 html.light-mode input:focus,
@@ -189,35 +199,35 @@ html.light-mode textarea:focus {
 
 html.light-mode input::placeholder,
 html.light-mode textarea::placeholder {
-  color: #94A3B8 !important;
+  color: #9CA3AF !important;
 }
 
 html.light-mode option {
   background-color: #FFFFFF !important;
-  color: #0F172A !important;
+  color: #1F2937 !important;
 }
 
-/* 13. Data Tables in Light Mode */
+/* 13. Data Tables & Grids */
 html.light-mode table {
-  color: #0F172A !important;
+  color: #1F2937 !important;
 }
 
 html.light-mode thead tr,
 html.light-mode thead th {
   background-color: #F8FAFC !important;
-  color: #475569 !important;
-  border-color: #E2E8F0 !important;
+  color: #4B5563 !important;
+  border-color: #E6E8EB !important;
 }
 
 html.light-mode tbody tr {
-  border-color: #E2E8F0 !important;
+  border-color: #E6E8EB !important;
 }
 
 html.light-mode tbody tr:hover {
   background-color: #F1F5F9 !important;
 }
 
-/* 14. Modal Backdrops & Dialog Containers */
+/* 14. Modal Backdrops & Dialog Windows */
 html.light-mode .bg-black\/75,
 html.light-mode .bg-black\/80 {
   background-color: rgba(15, 23, 42, 0.45) !important;
@@ -260,33 +270,33 @@ html.light-mode .bg-red-500\/10 {
   color: #B91C1C !important;
 }
 
-/* 16. Recharts & Charts Formatting in Light Mode */
+/* 16. Recharts & Data Visualizations */
 html.light-mode .recharts-default-tooltip {
   background-color: #FFFFFF !important;
-  border-color: #E2E8F0 !important;
-  color: #0F172A !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  border-color: #E6E8EB !important;
+  color: #1F2937 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08) !important;
   border-radius: 12px !important;
 }
 
 html.light-mode .recharts-cartesian-grid-horizontal line,
 html.light-mode .recharts-cartesian-grid-vertical line {
-  stroke: #E2E8F0 !important;
+  stroke: #E6E8EB !important;
 }
 
 html.light-mode .recharts-text {
-  fill: #64748B !important;
+  fill: #6B7280 !important;
 }
 
-/* 17. Code Blocks & Markdown in Light Mode */
+/* 17. Code Blocks & Markdown Previews */
 html.light-mode pre,
 html.light-mode code {
   background-color: #F1F5F9 !important;
-  color: #0F172A !important;
-  border-color: #E2E8F0 !important;
+  color: #1F2937 !important;
+  border-color: #E6E8EB !important;
 }
 
-/* 18. Scrollbars in Light Mode */
+/* 18. Custom Scrollbars in Light Mode */
 html.light-mode ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -304,6 +314,7 @@ html.light-mode ::-webkit-scrollbar-thumb {
 html.light-mode ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
+
 
 
 
