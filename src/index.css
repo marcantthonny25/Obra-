@@ -23,7 +23,7 @@
 }
 
 /* ==========================================================================
-   HOGAR EMPREENDIMENTOS - NOTION/LINEAR INSPIRED CORPORATE LIGHT THEME SYSTEM
+   HOGAR EMPREENDIMENTOS - NOTION/LINEAR/CLICKUP CORPORATE LIGHT THEME SYSTEM
    ========================================================================== */
 
 /* 1. App Canvas & Main Background (#F5F7FA) */
@@ -35,10 +35,13 @@ html.light-mode .min-h-\[calc\(100vh-80px\)\] {
   color: #1F2937 !important;
 }
 
-/* 2. Top Header Navigation Bar */
+/* 2. Top Header Navigation Bar & Header Overlay Wrappers */
 html.light-mode header,
 html.light-mode .bg-\[\#0A0A0B\],
-html.light-mode .bg-\[\#0B0B0C\] {
+html.light-mode .bg-\[\#0A0A0B\]\/80,
+html.light-mode .bg-\[\#0A0A0B\]\/90,
+html.light-mode .bg-\[\#0B0B0C\],
+html.light-mode .bg-\[\#0B0B0C\]\/90 {
   background-color: #FFFFFF !important;
   color: #1F2937 !important;
   border-color: #E6E8EB !important;
@@ -47,15 +50,22 @@ html.light-mode .bg-\[\#0B0B0C\] {
 
 /* 3. Cards & Elevated Surface Containers (#FFFFFF, #E6E8EB border, 0 6px 18px rgba(0,0,0,0.05) shadow) */
 html.light-mode .bg-\[\#111113\],
+html.light-mode .bg-\[\#111113\]\/80,
+html.light-mode .bg-\[\#111113\]\/90,
 html.light-mode .bg-\[\#151517\],
+html.light-mode .bg-\[\#151517\]\/80,
+html.light-mode .bg-\[\#151517\]\/90,
 html.light-mode .bg-\[\#141417\],
 html.light-mode .bg-\[\#161619\],
 html.light-mode .bg-\[\#18181C\],
+html.light-mode .bg-\[\#18181C\]\/80,
+html.light-mode .bg-\[\#18181C\]\/90,
 html.light-mode .bg-\[\#1A1A1F\],
 html.light-mode .bg-\[\#18181B\],
 html.light-mode .bg-\[\#1F1F24\],
 html.light-mode .bg-\[\#25252B\],
-html.light-mode .bg-\[\#0F0F11\] {
+html.light-mode .bg-\[\#0F0F11\],
+html.light-mode .bg-\[\#0F0F11\]\/90 {
   background-color: #FFFFFF !important;
   color: #1F2937 !important;
   border-color: #E6E8EB !important;
@@ -65,7 +75,11 @@ html.light-mode .bg-\[\#0F0F11\] {
 /* 4. Secondary Containers, Inset Panels & Nested Boxes */
 html.light-mode .bg-\[\#121215\],
 html.light-mode .bg-\[\#131316\],
-html.light-mode .bg-\[\#1D1D22\] {
+html.light-mode .bg-\[\#1D1D22\],
+html.light-mode .bg-slate-900,
+html.light-mode .bg-slate-900\/50,
+html.light-mode .bg-zinc-900,
+html.light-mode .bg-zinc-900\/50 {
   background-color: #F8FAFC !important;
   border-color: #E6E8EB !important;
   box-shadow: none !important;
@@ -77,7 +91,9 @@ html.light-mode .hover\:bg-\[\#1A1A1F\]:hover,
 html.light-mode .hover\:bg-\[\#1F1F21\]:hover,
 html.light-mode .hover\:bg-\[\#151517\]\/50:hover,
 html.light-mode .hover\:bg-\[\#222226\]:hover,
-html.light-mode .hover\:bg-\[\#2B2B30\]:hover {
+html.light-mode .hover\:bg-\[\#2B2B30\]:hover,
+html.light-mode .hover\:bg-slate-800:hover,
+html.light-mode .hover\:bg-zinc-800:hover {
   background-color: #F1F5F9 !important;
   border-color: #D1D5DB !important;
 }
@@ -98,7 +114,10 @@ html.light-mode nav button.bg-\[\#151517\] {
 html.light-mode .bg-gradient-to-r.from-\[\#0F0F11\].via-\[\#151517\].to-\[\#1a1815\],
 html.light-mode .bg-gradient-to-r.from-\[\#0F1D16\].via-\[\#0F0F11\].to-\[\#0A120D\],
 html.light-mode .bg-gradient-to-r.from-\[\#0F1D16\].to-\[\#141417\],
-html.light-mode .bg-gradient-to-br.from-\[\#151517\].to-\[\#0F0F11\] {
+html.light-mode .bg-gradient-to-br.from-\[\#151517\].to-\[\#0F0F11\],
+html.light-mode .bg-emerald-950\/20,
+html.light-mode .bg-emerald-950\/30,
+html.light-mode .bg-emerald-950\/40 {
   background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 60%, #F0FDF4 100%) !important;
   border-color: #A7F3D0 !important;
   color: #1F2937 !important;
@@ -112,7 +131,9 @@ html.light-mode .border-\[\#26262A\],
 html.light-mode .border-\[\#333333\],
 html.light-mode .border-\[\#1F1F24\],
 html.light-mode .border-\[\#2B2B30\],
-html.light-mode .border-\[\#2A2A2F\] {
+html.light-mode .border-\[\#2A2A2F\],
+html.light-mode .border-slate-800,
+html.light-mode .border-zinc-800 {
   border-color: #E6E8EB !important;
 }
 
@@ -133,7 +154,10 @@ html.light-mode .text-\[\#888888\],
 html.light-mode .text-\[\#9E9E9E\],
 html.light-mode .text-\[\#777777\],
 html.light-mode .text-\[\#666666\],
-html.light-mode .text-\[\#808080\] {
+html.light-mode .text-\[\#808080\],
+html.light-mode .text-slate-400,
+html.light-mode .text-gray-400,
+html.light-mode .text-zinc-400 {
   color: #6B7280 !important;
 }
 
@@ -166,7 +190,10 @@ html.light-mode .hover\:bg-amber-400:hover {
 }
 
 html.light-mode .bg-\[\#222226\],
-html.light-mode .bg-\[\#2B2B30\] {
+html.light-mode .bg-\[\#2B2B30\],
+html.light-mode .bg-\[\#1F1F24\],
+html.light-mode .bg-slate-800,
+html.light-mode .bg-zinc-800 {
   background-color: #F1F5F9 !important;
   color: #1E293B !important;
   border-color: #E2E8F0 !important;
@@ -240,31 +267,41 @@ html.light-mode .shadow-xl {
 }
 
 /* 15. Status Badges, Chips & Pills */
-html.light-mode .bg-emerald-500\/10 {
+html.light-mode .bg-emerald-500\/10,
+html.light-mode .bg-emerald-500\/20,
+html.light-mode .bg-emerald-900\/30 {
   background-color: #ECFDF5 !important;
   border-color: #A7F3D0 !important;
   color: #047857 !important;
 }
 
-html.light-mode .bg-amber-500\/10 {
+html.light-mode .bg-amber-500\/10,
+html.light-mode .bg-amber-500\/20,
+html.light-mode .bg-amber-900\/30 {
   background-color: #FFFBEB !important;
   border-color: #FDE68A !important;
   color: #B45309 !important;
 }
 
-html.light-mode .bg-blue-500\/10 {
+html.light-mode .bg-blue-500\/10,
+html.light-mode .bg-blue-500\/20,
+html.light-mode .bg-blue-900\/30 {
   background-color: #EFF6FF !important;
   border-color: #BFDBFE !important;
   color: #1D4ED8 !important;
 }
 
-html.light-mode .bg-purple-500\/10 {
+html.light-mode .bg-purple-500\/10,
+html.light-mode .bg-purple-500\/20,
+html.light-mode .bg-purple-900\/30 {
   background-color: #F5F3FF !important;
   border-color: #DDD6FE !important;
   color: #6D28D9 !important;
 }
 
-html.light-mode .bg-red-500\/10 {
+html.light-mode .bg-red-500\/10,
+html.light-mode .bg-red-500\/20,
+html.light-mode .bg-red-900\/30 {
   background-color: #FEF2F2 !important;
   border-color: #FECACA !important;
   color: #B91C1C !important;
