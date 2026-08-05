@@ -159,82 +159,79 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="bg-[#0F0F11] border-b border-[#1F1F21] text-white sticky top-0 z-40 shadow-sm">
       {/* Top Banner Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
         {/* Logo & Title */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {/* Custom Logo Button Container */}
           <div
             onClick={() => setIsLogoModalOpen(true)}
             className="relative group cursor-pointer"
-            title="Clique para trocar a foto / logotipo do canto superior esquerdo"
+            title="Clique para trocar a foto / logotipo do topo"
           >
-            <div className="bg-[#F2A30F] text-black p-2 rounded-xl shadow-md flex items-center justify-center font-bold w-11 h-11 overflow-hidden transition-transform group-hover:scale-105">
+            <div className="bg-emerald-600 text-white p-2 rounded-xl shadow-md flex items-center justify-center font-bold w-10 h-10 overflow-hidden transition-transform group-hover:scale-105 border border-emerald-400/30">
               {logoData.type === 'image' ? (
                 <img src={logoData.value} alt="Logo Hogar Empreendimentos" className="w-full h-full object-cover rounded-lg" />
               ) : logoData.value === 'Building2' ? (
-                <Building2 className="w-6 h-6 text-black" />
+                <Building2 className="w-5 h-5 text-white" />
               ) : logoData.value === 'Package' ? (
-                <Package className="w-6 h-6 text-black" />
+                <Package className="w-5 h-5 text-white" />
               ) : logoData.value === 'ShieldCheck' ? (
-                <ShieldCheck className="w-6 h-6 text-black" />
+                <ShieldCheck className="w-5 h-5 text-white" />
               ) : logoData.value === 'Factory' ? (
-                <Factory className="w-6 h-6 text-black" />
+                <Factory className="w-5 h-5 text-white" />
               ) : logoData.value === 'Wrench' ? (
-                <Wrench className="w-6 h-6 text-black" />
+                <Wrench className="w-5 h-5 text-white" />
               ) : (
-                <HardHat className="w-6 h-6 text-black" />
+                <HardHat className="w-5 h-5 text-white" />
               )}
             </div>
 
             {/* Hover Camera Icon Badge */}
-            <div className="absolute -bottom-1 -right-1 bg-black text-[#F2A30F] border border-[#F2A30F] p-1 rounded-full text-[10px] shadow-md opacity-80 group-hover:opacity-100 transition-opacity">
-              <Camera className="w-3 h-3" />
+            <div className="absolute -bottom-1 -right-1 bg-black text-emerald-400 border border-emerald-500/40 p-0.5 rounded-full text-[9px] shadow opacity-80 group-hover:opacity-100 transition-opacity">
+              <Camera className="w-2.5 h-2.5" />
             </div>
           </div>
 
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-extrabold tracking-tight text-emerald-400 font-sans">
+              <h1 className="text-lg sm:text-xl font-black tracking-tight text-emerald-400 font-sans">
                 Hogar Empreendimentos
               </h1>
-              <span className="bg-[#1F1F21] text-[#F2A30F] border border-[#333333] text-xs font-semibold px-2 py-0.5 rounded-full">
-                {currentUser ? `Perfil: ${currentUser.role}` : 'Gestão de Obras'}
-              </span>
             </div>
-            <p className="text-xs text-[#888888]">Gestão de Almoxarifados e Estoque Isolado por Obra</p>
+            <p className="text-[11px] text-[#888888] hidden sm:block">Gestão de Insumos e Obras</p>
           </div>
         </div>
 
-        {/* Worksite Active Selector Bar + Stock KPI summary badges */}
-        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 md:pb-0 text-xs">
+        {/* Essential Navigation Controls: Worksite Filter, CTA & User Profile */}
+        <div className="flex items-center gap-2 sm:gap-3 text-xs shrink-0">
           {/* Worksite Active Selector Control */}
           {isLockedWorksite ? (
             <div
-              className="bg-[#18181B] border border-amber-500/40 text-amber-300 px-3 py-1.5 rounded-xl flex items-center gap-2 shrink-0 shadow-sm"
+              className="bg-[#151517] border border-amber-500/30 text-amber-300 px-3 py-1.5 rounded-xl flex items-center gap-2 shrink-0 shadow-sm"
               title="Sua conta está vinculada exclusivamente a este canteiro de obras"
             >
               <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <div className="text-[11px] leading-tight">
-                <span className="text-[#888888] block text-[9px] uppercase font-bold">Obra Vinculada (Fixa)</span>
-                <span className="font-bold text-amber-300 truncate max-w-[150px] inline-block">
+              <div className="text-[11px] leading-tight hidden sm:block">
+                <span className="text-[#888888] block text-[9px] uppercase font-bold">Obra Vinculada</span>
+                <span className="font-bold text-amber-300 truncate max-w-[130px] inline-block">
                   {currentUser?.worksiteAssigned || 'Canteiro Restrito'}
                 </span>
               </div>
             </div>
           ) : (
-            <div className="bg-[#151517] border border-[#222226] hover:border-[#F2A30F]/40 px-3 py-1 rounded-xl flex items-center gap-2 shrink-0 transition-colors">
-              <Building2 className="w-4 h-4 text-[#F2A30F] shrink-0" />
+            <div className="bg-[#151517] border border-[#222226] hover:border-emerald-500/40 px-3 py-1.5 rounded-xl flex items-center gap-2 shrink-0 transition-colors">
+              <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <div className="text-[11px]">
-                <span className="text-[#888888] block text-[9px] uppercase font-bold">Filtrar por Obra</span>
+                <span className="text-[#888888] hidden sm:block text-[9px] uppercase font-bold">Filtrar por Obra</span>
                 <select
                   value={selectedWorksiteId}
                   onChange={(e) => onSelectWorksite(e.target.value)}
                   className="bg-transparent text-white font-bold text-xs outline-none cursor-pointer pr-1"
                 >
-                  <option value="ALL" className="bg-[#0F0F11] text-white">Todas as Obras (Visão Global)</option>
+                  <option value="ALL" className="bg-[#0F0F11] text-white">Todas as Obras (Global)</option>
                   {worksites.map((w) => (
                     <option key={w.id} value={w.id} className="bg-[#0F0F11] text-white">
-                      {w.name} ({w.code})
+                      {w.name}
                     </option>
                   ))}
                 </select>
@@ -242,47 +239,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          <div className="bg-[#151517] border border-[#1F1F21] px-3.5 py-1.5 rounded-xl flex items-center gap-2.5 shrink-0">
-            <Package className="w-4 h-4 text-blue-400" />
-            <div>
-              <span className="text-[#666666] block text-[10px] uppercase tracking-wider font-medium">Insumos</span>
-              <span className="font-mono font-bold text-white text-xs">{materials.length} itens</span>
-            </div>
-          </div>
-
-          <div className="bg-[#151517] border border-[#1F1F21] px-3.5 py-1.5 rounded-xl flex items-center gap-2.5 shrink-0">
-            <span className="text-emerald-400 font-bold text-xs font-mono">R$</span>
-            <div>
-              <span className="text-[#666666] block text-[10px] uppercase tracking-wider font-medium">Valor em Estoque</span>
-              <span className="font-mono font-bold text-emerald-400 text-xs">
-                {totalStockValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </span>
-            </div>
-          </div>
-
-          {criticalCount > 0 && (
-            <button
-              onClick={() => setActiveTab('materials')}
-              className="bg-amber-950/40 border border-amber-500/30 text-[#F2A30F] px-3 py-1.5 rounded-xl flex items-center gap-2 shrink-0 hover:bg-amber-900/40 transition-colors cursor-pointer"
-            >
-              <AlertTriangle className="w-4 h-4 text-[#F2A30F] animate-pulse" />
-              <div>
-                <span className="block text-[10px] uppercase tracking-wider text-[#F2A30F]/80 font-medium">
-                  Alerta Crítico
-                </span>
-                <span className="font-mono font-bold text-xs">{criticalCount} em falta</span>
-              </div>
-            </button>
-          )}
-
-          {/* New Movement CTA Button (Hidden or disabled if user role cannot execute movements) */}
+          {/* New Movement CTA Button */}
           {canMove && (
             <button
               onClick={onOpenNewMovement}
               className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
+              id="btn-navbar-new-movement"
             >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span className="hidden sm:inline">Lançar</span> Movimentação
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span className="hidden sm:inline">Lançar Movimentação</span>
             </button>
           )}
 
@@ -291,28 +256,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             {currentUser ? (
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="bg-[#151517] hover:bg-[#1F1F21] border border-[#222226] hover:border-[#F2A30F]/50 px-3 py-1.5 rounded-xl flex items-center gap-2.5 transition-all cursor-pointer text-left"
+                className="bg-[#151517] hover:bg-[#1A1A1F] border border-[#222226] hover:border-emerald-500/50 p-1.5 sm:px-3 sm:py-1.5 rounded-xl flex items-center gap-2 transition-all cursor-pointer text-left"
+                id="btn-navbar-user-avatar"
               >
-                <div className="w-7 h-7 rounded-lg bg-[#F2A30F]/15 text-[#F2A30F] font-bold border border-[#F2A30F]/30 flex items-center justify-center text-xs">
+                <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-bold border border-emerald-400/40 flex items-center justify-center text-xs shadow-sm">
                   {currentUser.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden sm:block">
-                  <div className="text-xs font-bold text-white leading-tight truncate max-w-[120px]">
+                  <div className="text-xs font-bold text-white leading-tight truncate max-w-[110px]">
                     {currentUser.name}
                   </div>
-                  <div className="text-[10px] text-[#F2A30F] font-medium leading-tight">
+                  <div className="text-[10px] text-emerald-400 font-medium leading-tight">
                     {currentUser.role}
                   </div>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-[#888888]" />
+                <ChevronDown className={`w-3.5 h-3.5 text-[#888888] transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180 text-emerald-400' : ''}`} />
               </button>
             ) : (
               <button
                 onClick={onOpenAuthModal}
-                className="bg-[#151517] hover:bg-[#1F1F21] border border-[#F2A30F]/40 text-[#F2A30F] px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shadow-md"
+                id="btn-navbar-auth"
               >
                 <UserIcon className="w-4 h-4" />
-                <span>Entrar / Cadastrar</span>
+                <span>Entrar</span>
               </button>
             )}
 
