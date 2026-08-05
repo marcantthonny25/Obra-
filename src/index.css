@@ -75,11 +75,11 @@
 
 html.light-mode,
 [data-theme="light"] {
-  /* Canvas & Application Shell */
+  /* Canvas & Application Shell - Soft neutral off-white background */
   --bg-app: #F5F7FA;
   --bg-header: #FFFFFF;
 
-  /* Surfaces & Containers */
+  /* Surfaces & Containers - Clean white cards with subtle contrast */
   --bg-surface: #FFFFFF;
   --bg-surface-elevated: #FFFFFF;
   --bg-surface-secondary: #F8FAFC;
@@ -87,38 +87,38 @@ html.light-mode,
   --bg-hover: #F1F5F9;
   --bg-active: #ECFDF5;
 
-  /* Form Controls */
+  /* Form Controls - Subtle light slate inputs with high-contrast borders on focus */
   --bg-input: #FAFAFA;
   --bg-input-hover: #FFFFFF;
-  --border-input: #DADDE2;
-  --border-input-hover: #CBD5E1;
+  --border-input: #DDE1E6;
+  --border-input-hover: #C1C7CD;
   --border-input-focus: #059669;
   --ring-focus: rgba(5, 150, 105, 0.15);
 
-  /* Borders */
-  --border-main: #E6E8EB;
-  --border-subtle: #E6E8EB;
+  /* Borders - Soft, crisp hairlines */
+  --border-main: #E5E8EB;
+  --border-subtle: #EDF0F2;
 
-  /* Typography */
-  --text-primary: #1F2937;
-  --text-main: #1F2937;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
+  /* Typography - High WCAG contrast Slate palette (#111827 / #4B5563 / #6B7280) */
+  --text-primary: #111827;
+  --text-main: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
 
-  /* Accent Emerald */
+  /* Accent Emerald (Institutional Brand Accent) */
   --accent-emerald: #059669;
   --accent-emerald-dark: #047857;
   --accent-emerald-bg: #ECFDF5;
   --accent-emerald-border: #A7F3D0;
 
-  /* Accent Amber (Primary Action) */
+  /* Accent Amber (Primary CTA Accent) */
   --accent-amber: #F2A30F;
   --accent-amber-hover: #E09307;
   --accent-amber-text: #B45309;
   --accent-amber-bg: #FFFBEB;
   --accent-amber-border: #FDE68A;
 
-  /* Status Accents */
+  /* Status Accents - Refined, comfortable badge tones */
   --accent-blue: #1D4ED8;
   --accent-blue-bg: #EFF6FF;
   --accent-blue-border: #BFDBFE;
@@ -131,12 +131,12 @@ html.light-mode,
   --accent-red-bg: #FEF2F2;
   --accent-red-border: #FECACA;
 
-  /* Shadows & Highlights */
-  --shadow-card: 0 6px 18px rgba(0, 0, 0, 0.05);
-  --shadow-header: 0 2px 8px rgba(0, 0, 0, 0.03);
+  /* Shadows - Organic multi-layer soft drop shadows for ambient depth */
+  --shadow-card: 0 4px 16px -2px rgba(0, 0, 0, 0.04), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+  --shadow-header: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
   --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
 
-  /* Hero & AI Gradient */
+  /* Hero & AI Gradient - Very subtle emerald sheen over crisp white */
   --bg-hero: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 60%, #F0FDF4 100%);
   --border-hero: #A7F3D0;
 
