@@ -435,32 +435,38 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
                 {/* Card Actions Footer */}
                 <div className="mt-4 pt-3 border-t border-[#1F1F21] flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => onOpenQuickMovement(item.id)}
-                      className="px-3 py-1.5 bg-[#F2A30F] hover:bg-amber-400 text-black font-bold rounded-lg text-xs flex items-center gap-1 shadow-xs transition-all cursor-pointer"
-                      title="Lançar movimentação neste insumo"
-                    >
-                      <ArrowUpRight className="w-3.5 h-3.5 stroke-[3]" />
-                      Movimentar
-                    </button>
+                    {canCreateOrEditMovements(currentUser?.role) ? (
+                      <button
+                        onClick={() => onOpenQuickMovement(item.id)}
+                        className="px-3 py-1.5 bg-[#F2A30F] hover:bg-amber-400 text-black font-bold rounded-lg text-xs flex items-center gap-1 shadow-xs transition-all cursor-pointer"
+                        title="Lançar movimentação neste insumo"
+                      >
+                        <ArrowUpRight className="w-3.5 h-3.5 stroke-[3]" />
+                        Movimentar
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-[#777777] italic font-mono">Somente Leitura</span>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => onEditMaterial(item)}
-                      className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
-                      title="Editar Insumo"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => onDeleteMaterial(item.id)}
-                      className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
-                      title="Excluir Insumo"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {canCreateOrEditCatalog(currentUser?.role) && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => onEditMaterial(item)}
+                        className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
+                        title="Editar Insumo"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onDeleteMaterial(item.id)}
+                        className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                        title="Excluir Insumo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -523,27 +529,36 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
                       </td>
                       <td className="p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => onOpenQuickMovement(item.id)}
-                            className="p-1.5 bg-[#F2A30F] text-black rounded-lg hover:bg-amber-400 font-bold transition-all cursor-pointer"
-                            title="Lançar Movimentação"
-                          >
-                            <ArrowUpRight className="w-3.5 h-3.5 stroke-[3]" />
-                          </button>
-                          <button
-                            onClick={() => onEditMaterial(item)}
-                            className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
-                            title="Editar"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => onDeleteMaterial(item.id)}
-                            className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
-                            title="Excluir"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {canCreateOrEditMovements(currentUser?.role) && (
+                            <button
+                              onClick={() => onOpenQuickMovement(item.id)}
+                              className="p-1.5 bg-[#F2A30F] text-black rounded-lg hover:bg-amber-400 font-bold transition-all cursor-pointer"
+                              title="Lançar Movimentação"
+                            >
+                              <ArrowUpRight className="w-3.5 h-3.5 stroke-[3]" />
+                            </button>
+                          )}
+                          {canCreateOrEditCatalog(currentUser?.role) && (
+                            <>
+                              <button
+                                onClick={() => onEditMaterial(item)}
+                                className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
+                                title="Editar"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => onDeleteMaterial(item.id)}
+                                className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
+                          {!canCreateOrEditMovements(currentUser?.role) && !canCreateOrEditCatalog(currentUser?.role) && (
+                            <span className="text-[10px] text-[#666666] font-mono">Consulta</span>
+                          )}
                         </div>
                       </td>
                     </tr>

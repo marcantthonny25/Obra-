@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Lock, CheckCircle2, Loader2 } from 'lucide-react';
-import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite, User, isWorksiteLockedRole } from '../types';
+import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite, User, isWorksiteLockedRole, canCreateOrEditMovements } from '../types';
 import { sanitizeForFirestore } from '../lib/firebase';
 
 interface QuickMovementModalProps {
@@ -61,14 +61,15 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
     setIsSaving(false);
 
     if (isOpen) {
-      if (selectedWorksiteId && selectedWorksiteId !== 'ALL') {
-        setWorkSiteId(selectedWorksiteId);
-      } else if (currentUser && isWorksiteLockedRole(currentUser.role)) {
+      if (currentUser && isWorksiteLockedRole(currentUser.role)) {
         const matched = worksites.find(
           (w) => w.id === currentUser.worksiteId || w.name.toLowerCase() === currentUser.worksiteAssigned?.toLowerCase()
         );
         if (matched) setWorkSiteId(matched.id);
+        else if (currentUser.worksiteId) setWorkSiteId(currentUser.worksiteId);
         else if (worksites[0]) setWorkSiteId(worksites[0].id);
+      } else if (selectedWorksiteId && selectedWorksiteId !== 'ALL') {
+        setWorkSiteId(selectedWorksiteId);
       } else if (worksites[0]) {
         setWorkSiteId(worksites[0].id);
       }
@@ -98,9 +99,24 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
     setErrorMsg('');
     setSuccessMsg('');
 
+    if (currentUser && !canCreateOrEditMovements(currentUser.role)) {
+      setErrorMsg('Acesso negado: Perfis de Engenheiro e Coordenador são de leitura e não podem lançar movimentações.');
+      return;
+    }
+
     if (!selectedMaterial) {
       setErrorMsg('Selecione um insumo válido.');
       return;
+    }
+
+    if (currentUser && isWorksiteLockedRole(currentUser.role)) {
+      const assignedWorksite = worksites.find(
+        (w) => w.id === currentUser.worksiteId || w.name.toLowerCase() === currentUser.worksiteAssigned?.toLowerCase()
+      );
+      if (assignedWorksite && workSiteId !== assignedWorksite.id) {
+        setErrorMsg(`Almoxarife só pode lançar movimentações na obra vinculada ao seu perfil (${assignedWorksite.name}).`);
+        return;
+      }
     }
 
     const qty = parseFloat(quantity);

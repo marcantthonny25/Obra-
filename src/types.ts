@@ -177,7 +177,15 @@ export const canManageUsers = (role?: string): boolean => {
 export const canCreateOrEditMovements = (role?: string): boolean => {
   if (!role) return false;
   const norm = role.toLowerCase().trim();
-  // Administrador and Almoxarife can execute stock movements
+  // Coordenador and Engenheiro are strictly read-only for movements
+  if (
+    norm.includes('engenheiro') ||
+    norm.includes('engenheira') ||
+    norm.includes('coordenador')
+  ) {
+    return false;
+  }
+  // Administrador and Almoxarife can execute movements
   return norm === 'administrador' || norm === 'admin' || norm.includes('almoxarife');
 };
 
@@ -219,7 +227,7 @@ export const isReadOnlyRole = (role?: string): boolean => {
 export const isWorksiteLockedRole = (role?: string): boolean => {
   if (!role) return false;
   const norm = role.toLowerCase().trim();
-  return norm.includes('almoxarife') || norm.includes('mestre');
+  return norm.includes('almoxarife');
 };
 
 export const isGlobalWorksiteRole = (role?: string): boolean => {

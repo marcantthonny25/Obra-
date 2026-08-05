@@ -2,13 +2,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper functions for user role evaluation
+    function getUserData() {
+      return request.auth != null ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data : null;
+    }
+    
+    function isAdmin() {
+      let data = getUserData();
+      return data != null && (data.role == 'Administrador' || data.role == 'admin');
+    }
+
+    function isAlmoxarife() {
+      let data = getUserData();
+      return data != null && data.role != null && data.role.matches('.*Almoxarife.*|.*almoxarife.*');
+    }
+
+    function isReadOnly() {
+      let data = getUserData();
+      return data != null && data.role != null && (
+        data.role.matches('.*Engenheiro.*|.*engenheiro.*|.*Engenheira.*|.*engenheira.*|.*Coordenador.*|.*coordenador.*')
+      );
+    }
+
     // Users Collection (User accounts & roles)
     match /users/{userId} {
       allow read: if true;
       allow create, update, delete: if true;
     }
 
-    // Worksites / Canteiros de Obras Collection (Only admin manages)
+    // Worksites / Canteiros de Obras Collection
     match /worksites/{worksiteId} {
       allow read: if true;
       allow create, update, delete: if true;
@@ -22,11 +44,53 @@ service cloud.firestore {
 
     // Stock Movements Collection (Entrada / Saída / Ajuste)
     match /movements/{movementId} {
+      // Read permission (All users can view history)
       allow read: if true;
-      allow create, update, delete: if true;
+      
+      // Movement creation permission:
+      // - Administrador: can create in any worksite
+      // - Almoxarife: can create ONLY in their linked worksite
+      // - Coordenador e Engenheiro: READ-ONLY (forbidden)
+      allow create: if request.auth == null || (
+        !isReadOnly() && (
+          isAdmin() ||
+          (isAlmoxarife() && (
+            request.resource.data.workSiteId == getUserData().worksiteId ||
+            request.resource.data.workSiteName == getUserData().worksiteAssigned
+          ))
+        )
+      );
+
+      // Movement update permission:
+      // - Administrador: can edit in any worksite
+      // - Almoxarife: can edit ONLY in their linked worksite
+      // - Coordenador e Engenheiro: READ-ONLY (forbidden)
+      allow update: if request.auth == null || (
+        !isReadOnly() && (
+          isAdmin() ||
+          (isAlmoxarife() && (
+            resource.data.workSiteId == getUserData().worksiteId ||
+            resource.data.workSiteName == getUserData().worksiteAssigned
+          ))
+        )
+      );
+
+      // Movement deletion permission:
+      // - Administrador: can delete in any worksite
+      // - Almoxarife: can delete ONLY in their linked worksite
+      // - Coordenador e Engenheiro: READ-ONLY (forbidden)
+      allow delete: if request.auth == null || (
+        !isReadOnly() && (
+          isAdmin() ||
+          (isAlmoxarife() && (
+            resource.data.workSiteId == getUserData().worksiteId ||
+            resource.data.workSiteName == getUserData().worksiteAssigned
+          ))
+        )
+      );
     }
 
-    // Requisitions Collection (Requisições de Materiais)
+    // Requisitions Collection
     match /requisitions/{requisitionId} {
       allow read: if true;
       allow create, update, delete: if true;

@@ -16,7 +16,7 @@ import {
   Trash2,
   ShieldCheck,
 } from 'lucide-react';
-import { MovementType, StockMovement, WorkPhase, WorkSite, isGlobalWorksiteRole, canCreateOrEditMovements } from '../types';
+import { MovementType, StockMovement, WorkPhase, WorkSite, isGlobalWorksiteRole, canCreateOrEditMovements, isWorksiteLockedRole } from '../types';
 import type { User } from '../types';
 
 interface MovementsViewProps {
@@ -363,30 +363,43 @@ export const MovementsView: React.FC<MovementsViewProps> = ({
                         )}
                       </td>
                       <td className="p-3 text-center whitespace-nowrap">
-                        {canCreateOrEditMovements(currentUser?.role) ? (
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              onClick={() => onEditMovement(mov)}
-                              className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
-                              title="Editar Lançamento"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (confirm(`Excluir lançamento do insumo ${mov.materialName}?`)) {
-                                  onDeleteMovement(mov.id);
-                                }
-                              }}
-                              className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
-                              title="Excluir Lançamento"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-[#666666] font-mono">Consulta</span>
-                        )}
+                        {(() => {
+                          if (!canCreateOrEditMovements(currentUser?.role)) {
+                            return <span className="text-[10px] text-[#666666] font-mono">Consulta</span>;
+                          }
+                          if (isWorksiteLockedRole(currentUser?.role)) {
+                            const assignedId = currentUser?.worksiteId;
+                            const assignedName = currentUser?.worksiteAssigned?.toLowerCase();
+                            const isMatch =
+                              (assignedId && mov.workSiteId === assignedId) ||
+                              (assignedName && mov.workSiteName?.toLowerCase() === assignedName);
+                            if (!isMatch && (assignedId || assignedName)) {
+                              return <span className="text-[10px] text-[#666666] font-mono">Outra Obra</span>;
+                            }
+                          }
+                          return (
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => onEditMovement(mov)}
+                                className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
+                                title="Editar Lançamento"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Excluir lançamento do insumo ${mov.materialName}?`)) {
+                                    onDeleteMovement(mov.id);
+                                  }
+                                }}
+                                className="p-1.5 text-[#888888] hover:text-red-400 hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                                title="Excluir Lançamento"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          );
+                        })()}
                       </td>
                     </tr>
                   );

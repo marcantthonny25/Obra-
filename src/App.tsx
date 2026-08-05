@@ -15,7 +15,7 @@ import { MaterialFormModal } from './components/MaterialFormModal';
 import { WorksiteFormModal } from './components/WorksiteFormModal';
 import { EditMovementModal } from './components/EditMovementModal';
 import { AuthModal } from './components/AuthModal';
-import { MaterialItem, StockMovement, WorkSite, User, isWorksiteLockedRole, canManageWorksites } from './types';
+import { MaterialItem, StockMovement, WorkSite, User, isWorksiteLockedRole, canManageWorksites, canCreateOrEditMovements } from './types';
 import { INITIAL_MATERIALS, INITIAL_MOVEMENTS, INITIAL_WORKSITES } from './data/initialData';
 import { INITIAL_USERS } from './data/initialUsers';
 
@@ -212,6 +212,21 @@ export default function App() {
     movementData: Omit<StockMovement, 'id' | 'date'>,
     updatedUnitPrice?: number
   ) => {
+    if (currentUser && !canCreateOrEditMovements(currentUser.role)) {
+      throw new Error('Acesso negado: Perfis de Coordenador e Engenheiro são estritamente somente-leitura. Não podem criar movimentações.');
+    }
+
+    if (currentUser && isWorksiteLockedRole(currentUser.role)) {
+      const assignedId = currentUser.worksiteId;
+      const assignedName = currentUser.worksiteAssigned?.toLowerCase();
+      const worksiteMatch =
+        (assignedId && movementData.workSiteId === assignedId) ||
+        (assignedName && movementData.workSiteName?.toLowerCase() === assignedName);
+      if (!worksiteMatch && (assignedId || assignedName)) {
+        throw new Error('Permissão negada: Almoxarife só pode lançar movimentações na obra vinculada ao seu perfil.');
+      }
+    }
+
     const movId = `mov-${Date.now()}`;
     const rawMovement: StockMovement = {
       ...movementData,
@@ -332,8 +347,23 @@ export default function App() {
 
   // Save (update) Movement in Firestore (Atomic Transaction)
   const handleSaveMovement = async (id: string, updatedData: Partial<StockMovement>) => {
+    if (currentUser && !canCreateOrEditMovements(currentUser.role)) {
+      throw new Error('Acesso negado: Perfis de Coordenador e Engenheiro são estritamente somente-leitura. Não podem editar movimentações.');
+    }
+
     const oldMovement = movements.find((m) => m.id === id);
     if (!oldMovement) throw new Error('Movimentação original não encontrada.');
+
+    if (currentUser && isWorksiteLockedRole(currentUser.role)) {
+      const assignedId = currentUser.worksiteId;
+      const assignedName = currentUser.worksiteAssigned?.toLowerCase();
+      const worksiteMatch =
+        (assignedId && oldMovement.workSiteId === assignedId) ||
+        (assignedName && oldMovement.workSiteName?.toLowerCase() === assignedName);
+      if (!worksiteMatch && (assignedId || assignedName)) {
+        throw new Error('Permissão negada: Almoxarife só pode alterar movimentações da obra vinculada ao seu perfil.');
+      }
+    }
 
     const movementRef = doc(db, 'movements', id);
     const materialRef = doc(db, 'materials', oldMovement.materialId);
@@ -391,8 +421,23 @@ export default function App() {
 
   // Delete Movement from Firestore (Atomic Transaction)
   const handleDeleteMovement = async (id: string) => {
+    if (currentUser && !canCreateOrEditMovements(currentUser.role)) {
+      throw new Error('Acesso negado: Perfis de Coordenador e Engenheiro são estritamente somente-leitura. Não podem excluir movimentações.');
+    }
+
     const movToDelete = movements.find((m) => m.id === id);
     if (!movToDelete) return;
+
+    if (currentUser && isWorksiteLockedRole(currentUser.role)) {
+      const assignedId = currentUser.worksiteId;
+      const assignedName = currentUser.worksiteAssigned?.toLowerCase();
+      const worksiteMatch =
+        (assignedId && movToDelete.workSiteId === assignedId) ||
+        (assignedName && movToDelete.workSiteName?.toLowerCase() === assignedName);
+      if (!worksiteMatch && (assignedId || assignedName)) {
+        throw new Error('Permissão negada: Almoxarife só pode excluir movimentações da obra vinculada ao seu perfil.');
+      }
+    }
 
     const movementRef = doc(db, 'movements', id);
     const materialRef = doc(db, 'materials', movToDelete.materialId);
@@ -705,6 +750,7 @@ export default function App() {
         worksites={worksites}
         onSaveMovement={handleSaveMovement}
         onDeleteMovement={handleDeleteMovement}
+        currentUser={currentUser}
       />
 
       {/* Create / Edit Material Modal */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Trash2, Calendar, User, FileText, Building, CheckCircle2, Loader2 } from 'lucide-react';
-import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite } from '../types';
+import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Trash2, Calendar, User as UserIcon, FileText, Building, CheckCircle2, Loader2 } from 'lucide-react';
+import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite, User, canCreateOrEditMovements, isWorksiteLockedRole } from '../types';
 import { sanitizeForFirestore } from '../lib/firebase';
 
 interface EditMovementModalProps {
@@ -11,6 +11,7 @@ interface EditMovementModalProps {
   worksites: WorkSite[];
   onSaveMovement: (id: string, updatedData: Partial<StockMovement>) => Promise<void> | void;
   onDeleteMovement: (id: string) => Promise<void> | void;
+  currentUser?: User | null;
 }
 
 const WORK_PHASES: WorkPhase[] = [
@@ -33,6 +34,7 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
   worksites,
   onSaveMovement,
   onDeleteMovement,
+  currentUser,
 }) => {
   const [type, setType] = useState<MovementType>('SAIDA');
   const [quantity, setQuantity] = useState<string>('');
@@ -73,6 +75,23 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+
+    if (currentUser && !canCreateOrEditMovements(currentUser.role)) {
+      setErrorMsg('Acesso negado: Perfis de Engenheiro e Coordenador são de leitura e não podem editar movimentações.');
+      return;
+    }
+
+    if (currentUser && isWorksiteLockedRole(currentUser.role)) {
+      const assignedName = currentUser.worksiteAssigned?.toLowerCase();
+      const assignedId = currentUser.worksiteId;
+      const isMovInAssignedWorksite =
+        (assignedId && movement.workSiteId === assignedId) ||
+        (assignedName && movement.workSiteName?.toLowerCase() === assignedName);
+      if (!isMovInAssignedWorksite) {
+        setErrorMsg('Acesso negado: Almoxarife só pode alterar movimentações da obra vinculada ao seu perfil.');
+        return;
+      }
+    }
 
     const qty = parseFloat(quantity);
     if (isNaN(qty) || qty <= 0) {
@@ -134,6 +153,23 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
   };
 
   const handleDelete = async () => {
+    if (currentUser && !canCreateOrEditMovements(currentUser.role)) {
+      setErrorMsg('Acesso negado: Perfis de Engenheiro e Coordenador são de leitura e não podem excluir movimentações.');
+      return;
+    }
+
+    if (currentUser && isWorksiteLockedRole(currentUser.role)) {
+      const assignedName = currentUser.worksiteAssigned?.toLowerCase();
+      const assignedId = currentUser.worksiteId;
+      const isMovInAssignedWorksite =
+        (assignedId && movement.workSiteId === assignedId) ||
+        (assignedName && movement.workSiteName?.toLowerCase() === assignedName);
+      if (!isMovInAssignedWorksite) {
+        setErrorMsg('Acesso negado: Almoxarife só pode excluir movimentações da obra vinculada ao seu perfil.');
+        return;
+      }
+    }
+
     if (confirm(`Tem certeza que deseja excluir este registro de movimentação (${movement.type} - ${movement.materialName})?`)) {
       setErrorMsg('');
       setSuccessMsg('');
