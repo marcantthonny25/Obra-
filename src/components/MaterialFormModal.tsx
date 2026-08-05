@@ -123,23 +123,42 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
         ? detailsOptionsInput.split(',').map((o) => o.trim()).filter((o) => o.length > 0)
         : undefined;
 
+      const materialPayload: Record<string, any> = {
+        code: code.trim() || 'INS-000',
+        name: name.trim(),
+        category,
+        quantity: parseFloat(quantity) || 0,
+        minQuantity: parseFloat(minQuantity) || 0,
+        unit: unit.trim(),
+        avgUnitPrice: parseFloat(avgUnitPrice) || 0,
+        location: location.trim() || 'Almoxarifado',
+        supplier: supplier.trim() || 'Não especificado',
+      };
+
+      if (details.trim()) {
+        materialPayload.details = details.trim();
+      } else if (parsedOptions && parsedOptions[0]) {
+        materialPayload.details = parsedOptions[0];
+      }
+
+      if (parsedOptions && parsedOptions.length > 0) {
+        materialPayload.detailsOptions = parsedOptions;
+      }
+
+      if (expiryDate && expiryDate.trim()) {
+        materialPayload.expiryDate = expiryDate.trim();
+      }
+
+      if (batchNumber && batchNumber.trim()) {
+        materialPayload.batchNumber = batchNumber.trim();
+      }
+
+      if (notes && notes.trim()) {
+        materialPayload.notes = notes.trim();
+      }
+
       await onSaveMaterial(
-        {
-          code: code.trim() || 'INS-000',
-          name: name.trim(),
-          category,
-          quantity: parseFloat(quantity) || 0,
-          minQuantity: parseFloat(minQuantity) || 0,
-          unit: unit.trim(),
-          avgUnitPrice: parseFloat(avgUnitPrice) || 0,
-          location: location.trim() || 'Almoxarifado',
-          supplier: supplier.trim() || 'Não especificado',
-          details: details.trim() ? details.trim() : (parsedOptions && parsedOptions[0] ? parsedOptions[0] : undefined),
-          detailsOptions: parsedOptions && parsedOptions.length > 0 ? parsedOptions : undefined,
-          expiryDate: expiryDate ? expiryDate : undefined,
-          batchNumber: batchNumber ? batchNumber : undefined,
-          notes: notes.trim() ? notes.trim() : undefined,
-        },
+        materialPayload as Omit<MaterialItem, 'id' | 'lastUpdated'>,
         materialToEdit?.id
       );
 

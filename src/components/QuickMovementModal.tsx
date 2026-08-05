@@ -126,23 +126,39 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
     setIsSaving(true);
 
     try {
+      const movementPayload: Record<string, any> = {
+        type,
+        materialId: selectedMaterial.id,
+        materialName: selectedMaterial.name,
+        quantity: qty,
+        unit: selectedMaterial.unit,
+        unitPrice: price,
+        totalPrice: price * qty,
+        responsible: responsible.trim(),
+      };
+
+      if (itemDetail.trim()) {
+        movementPayload.itemDetail = itemDetail.trim();
+      }
+
+      if ((type === 'SAIDA' || type === 'DEVOLUCAO') && selectedWorksite?.id) {
+        movementPayload.workSiteId = selectedWorksite.id;
+        movementPayload.workSiteName = selectedWorksite.name;
+        if (workPhase) {
+          movementPayload.workPhase = workPhase;
+        }
+      }
+
+      if (type === 'ENTRADA' && invoiceNumber.trim()) {
+        movementPayload.invoiceNumber = invoiceNumber.trim();
+      }
+
+      if (notes.trim()) {
+        movementPayload.notes = notes.trim();
+      }
+
       await onAddMovement(
-        {
-          type,
-          materialId: selectedMaterial.id,
-          materialName: selectedMaterial.name,
-          itemDetail: itemDetail.trim() ? itemDetail.trim() : undefined,
-          quantity: qty,
-          unit: selectedMaterial.unit,
-          unitPrice: price,
-          totalPrice: price * qty,
-          workSiteId: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.id : undefined,
-          workSiteName: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.name : undefined,
-          workPhase: (type === 'SAIDA' || type === 'DEVOLUCAO') ? workPhase : undefined,
-          invoiceNumber: type === 'ENTRADA' ? invoiceNumber : undefined,
-          responsible: responsible.trim(),
-          notes: notes.trim(),
-        },
+        movementPayload as Omit<StockMovement, 'id' | 'date'>,
         type === 'ENTRADA' && unitPrice ? parseFloat(unitPrice) : undefined
       );
 

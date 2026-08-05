@@ -21,6 +21,16 @@ import { INITIAL_USERS } from './data/initialUsers';
 
 const LOCAL_STORAGE_KEY_CURRENT_USER = 'hogar_current_user_v2';
 
+const stripUndefined = <T extends Record<string, any>>(obj: T): T => {
+  const cleaned: Record<string, any> = {};
+  Object.keys(obj).forEach((key) => {
+    if (obj[key] !== undefined) {
+      cleaned[key] = obj[key];
+    }
+  });
+  return cleaned as T;
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users'>('home');
 
@@ -201,11 +211,11 @@ export default function App() {
     updatedUnitPrice?: number
   ) => {
     const movId = `mov-${Date.now()}`;
-    const newMovement: StockMovement = {
+    const newMovement: StockMovement = stripUndefined({
       ...movementData,
       id: movId,
       date: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
-    };
+    });
 
     const materialRef = doc(db, 'materials', movementData.materialId);
     const movementRef = doc(db, 'movements', movId);
@@ -275,11 +285,11 @@ export default function App() {
     id?: string
   ) => {
     const matId = id || `mat-${Date.now()}`;
-    const materialToSave: MaterialItem = {
+    const materialToSave: MaterialItem = stripUndefined({
       ...materialData,
       id: matId,
       lastUpdated: new Date().toISOString().slice(0, 10),
-    };
+    });
     try {
       await setDoc(doc(db, 'materials', matId), materialToSave);
       console.log(`[Firestore] Insumo ${matId} salvo com sucesso no Firestore.`);
@@ -348,7 +358,7 @@ export default function App() {
           restoredQty -= newQty;
         }
 
-        const updatedMov: StockMovement = { ...oldMovement, ...updatedData };
+        const updatedMov: StockMovement = stripUndefined({ ...oldMovement, ...updatedData });
 
         transaction.update(materialRef, {
           quantity: Math.max(0, restoredQty),

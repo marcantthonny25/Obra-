@@ -90,19 +90,35 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
     setIsSaving(true);
 
     try {
-      await onSaveMovement(movement.id, {
+      const updatePayload: Record<string, any> = {
         type,
-        itemDetail: itemDetail.trim() ? itemDetail.trim() : undefined,
         quantity: qty,
         unitPrice: price,
         totalPrice: price * qty,
-        workSiteId: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.id : undefined,
-        workSiteName: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.name : undefined,
-        workPhase: (type === 'SAIDA' || type === 'DEVOLUCAO') ? workPhase : undefined,
-        invoiceNumber: type === 'ENTRADA' ? invoiceNumber : undefined,
         responsible: responsible.trim(),
-        notes: notes.trim(),
-      });
+      };
+
+      if (itemDetail.trim()) {
+        updatePayload.itemDetail = itemDetail.trim();
+      }
+
+      if ((type === 'SAIDA' || type === 'DEVOLUCAO') && selectedWorksite?.id) {
+        updatePayload.workSiteId = selectedWorksite.id;
+        updatePayload.workSiteName = selectedWorksite.name;
+        if (workPhase) {
+          updatePayload.workPhase = workPhase;
+        }
+      }
+
+      if (type === 'ENTRADA' && invoiceNumber.trim()) {
+        updatePayload.invoiceNumber = invoiceNumber.trim();
+      }
+
+      if (notes.trim()) {
+        updatePayload.notes = notes.trim();
+      }
+
+      await onSaveMovement(movement.id, updatePayload as Partial<StockMovement>);
 
       setSuccessMsg('Movimentação atualizada com sucesso no Firestore!');
       setTimeout(() => {
