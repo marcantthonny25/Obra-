@@ -76,79 +76,6 @@
   --color-scheme: dark;
 }
 
-/* --------------------------------------------------------------------------
-   LIGHT THEME DESIGN TOKENS (Built From Scratch - Pure Corporate Light System)
-   -------------------------------------------------------------------------- */
-html.light-mode,
-[data-theme="light"] {
-  /* Canvas & Application Shell - Quiet off-white neutral background */
-  --bg-app: #F8FAFC;
-  --bg-header: #FFFFFF;
-
-  /* Surfaces & Containers - Crisp white cards with soft boundaries */
-  --bg-surface: #FFFFFF;
-  --bg-surface-elevated: #FFFFFF;
-  --bg-surface-secondary: #F8FAFC;
-  --bg-panel: #FAFAFA;
-  --bg-hover: #F1F5F9;
-  --bg-active: #F1F5F9;
-
-  /* Form Controls - Light slate inputs with subtle hairline borders */
-  --bg-input: #FAFAFA;
-  --bg-input-hover: #FFFFFF;
-  --border-input: #E2E5E9;
-  --border-input-hover: #CBD5E1;
-  --border-input-focus: #059669;
-  --ring-focus: rgba(5, 150, 105, 0.12);
-
-  /* Borders - Soft, ultra-light gray hairlines */
-  --border-main: #EEF0F2;
-  --border-subtle: #F3F5F7;
-
-  /* Typography - Softer Slate palette for high WCAG compliance and comfort */
-  --text-primary: #1E293B;
-  --text-main: #1E293B;
-  --text-secondary: #475569;
-  --text-muted: #64748B;
-
-  /* Accent Emerald - Institutional Brand Highlight */
-  --accent-emerald: #059669;
-  --accent-emerald-dark: #047857;
-  --accent-emerald-bg: #F0FDF4;
-  --accent-emerald-border: #DCFCE7;
-
-  /* Accent Amber - Primary CTA Button Accent */
-  --accent-amber: #F2A30F;
-  --accent-amber-hover: #E09307;
-  --accent-amber-text: #B45309;
-  --accent-amber-bg: #FFFBEB;
-  --accent-amber-border: #FEF3C7;
-
-  /* Status Accents - Muted, professional status badges */
-  --accent-blue: #2563EB;
-  --accent-blue-bg: #F0F9FF;
-  --accent-blue-border: #E0F2FE;
-
-  --accent-purple: #7C3AED;
-  --accent-purple-bg: #FAF5FF;
-  --accent-purple-border: #F3E8FF;
-
-  --accent-red: #DC2626;
-  --accent-red-bg: #FEF2F2;
-  --accent-red-border: #FEE2E2;
-
-  /* Shadows - Ambient multi-layer drop shadows for light depth */
-  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
-  --shadow-header: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
-  --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-
-  /* Hero & Feature Banners - Pure white card surface */
-  --bg-hero: #FFFFFF;
-  --border-hero: #EEF0F2;
-
-  --color-scheme: light;
-}
-
 /* ==========================================================================
    BASE & COMPONENT MAPPINGS (Driven Entirely by Design Tokens)
    ========================================================================== */
@@ -435,19 +362,4 @@ html.light-mode,
   background: var(--text-muted);
 }
 
-/* Softer Icon Contrast & Generous Breathing Space in Light Mode */
-html.light-mode svg.lucide,
-html.light-mode button svg,
-html.light-mode label svg,
-html.light-mode .text-slate-400 svg,
-html.light-mode .text-gray-400 svg,
-html.light-mode .text-zinc-400 svg {
-  stroke-width: 1.8px;
-  opacity: 0.88;
-}
 
-html.light-mode table td,
-html.light-mode table th {
-  padding-top: 0.875rem;
-  padding-bottom: 0.875rem;
-}
