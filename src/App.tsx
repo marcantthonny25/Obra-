@@ -472,6 +472,7 @@ export default function App() {
             onNavigate={setActiveTab}
             currentUser={currentUser}
             onOpenAuthModal={() => setIsAuthModalOpen(true)}
+            onLogout={handleLogout}
             materials={materials}
             movements={movements}
             worksites={worksites}

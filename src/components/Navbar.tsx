@@ -25,8 +25,13 @@ import {
   Users,
   Lock,
   Home,
+  Settings,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { MaterialItem, User, WorkSite, canManageUsers, canCreateOrEditMovements, isWorksiteLockedRole } from '../types';
+import { UserProfileModal } from './UserProfileModal';
+import { UserSettingsModal } from './UserSettingsModal';
 
 interface NavbarProps {
   activeTab: 'home' | 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users';
@@ -64,6 +69,24 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  // Theme state ('dark' | 'light') persisted in localStorage
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('hogar_theme') as 'dark' | 'light') || 'dark';
+  });
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('hogar_theme', nextTheme);
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light-mode');
+    } else {
+      document.documentElement.classList.remove('light-mode');
+    }
+  };
 
   const isLockedWorksite = currentUser ? isWorksiteLockedRole(currentUser.role) : false;
   const canMove = currentUser ? canCreateOrEditMovements(currentUser.role) : true;
@@ -295,39 +318,83 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* USER DROPDOWN MENU */}
             {isUserMenuOpen && currentUser && (
-              <div className="absolute right-0 mt-2 w-64 bg-[#0F0F11] border border-[#222226] rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-72 bg-[#0F0F11] border border-[#222226] rounded-2xl shadow-2xl p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150">
                 {/* User Info Header */}
-                <div className="p-3 bg-[#151517] border border-[#1F1F21] rounded-xl mb-1.5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-[#F2A30F] text-black font-extrabold flex items-center justify-center text-sm shadow-sm">
+                <div className="p-3 bg-[#151517] border border-[#1F1F21] rounded-xl mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black flex items-center justify-center text-base shadow-sm border border-emerald-400/40">
                       {currentUser.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="overflow-hidden">
                       <div className="text-xs font-bold text-white truncate">{currentUser.name}</div>
-                      <div className="text-[11px] text-[#F2A30F] font-semibold">{currentUser.role}</div>
+                      <div className="text-[11px] text-emerald-400 font-semibold">{currentUser.role}</div>
                       <div className="text-[10px] text-[#888888] truncate">{currentUser.email}</div>
                     </div>
                   </div>
 
                   {currentUser.worksiteAssigned && (
                     <div className="mt-2 pt-2 border-t border-[#222226] flex items-center gap-1.5 text-[11px] text-[#AAAAAA]">
-                      <Building className="w-3.5 h-3.5 text-[#F2A30F]" />
+                      <Building className="w-3.5 h-3.5 text-emerald-400" />
                       <span className="truncate">{currentUser.worksiteAssigned}</span>
                     </div>
                   )}
                 </div>
 
-                {/* Actions & User list */}
+                {/* Profile Menu Requested Actions */}
                 <div className="space-y-1 text-xs">
+                  {/* 1. Meu Perfil */}
                   <button
                     onClick={() => {
                       setIsUserMenuOpen(false);
-                      setIsLogoModalOpen(true);
+                      setIsProfileModalOpen(true);
                     }}
-                    className="w-full p-2.5 rounded-xl text-left hover:bg-[#151517] text-[#E0E0E0] hover:text-white flex items-center gap-2 transition-colors cursor-pointer"
+                    className="w-full p-2.5 rounded-xl text-left hover:bg-[#18181C] text-[#E0E0E0] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
+                    id="user-menu-item-profile"
                   >
-                    <Camera className="w-4 h-4 text-[#F2A30F]" />
-                    <span>Trocar Foto / Logotipo Topo</span>
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+                        <UserIcon className="w-4 h-4" />
+                      </div>
+                      <span className="font-semibold">Meu Perfil</span>
+                    </div>
+                    <span className="text-[10px] text-[#777777] group-hover:text-emerald-400 transition-colors">Detalhes</span>
+                  </button>
+
+                  {/* 2. Configurações */}
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setIsSettingsModalOpen(true);
+                    }}
+                    className="w-full p-2.5 rounded-xl text-left hover:bg-[#18181C] text-[#E0E0E0] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
+                    id="user-menu-item-settings"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:bg-blue-500/20 transition-colors">
+                        <Settings className="w-4 h-4" />
+                      </div>
+                      <span className="font-semibold">Configurações</span>
+                    </div>
+                    <span className="text-[10px] text-[#777777] group-hover:text-blue-400 transition-colors">Sistema</span>
+                  </button>
+
+                  {/* 3. Tema Claro/Escuro */}
+                  <button
+                    onClick={() => {
+                      toggleTheme();
+                    }}
+                    className="w-full p-2.5 rounded-xl text-left hover:bg-[#18181C] text-[#E0E0E0] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
+                    id="user-menu-item-theme"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 group-hover:bg-amber-500/20 transition-colors">
+                        {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                      </div>
+                      <span className="font-semibold">Tema Claro / Escuro</span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#1F1F24] text-amber-400 border border-amber-500/30">
+                      {theme === 'dark' ? 'Escuro' : 'Claro'}
+                    </span>
                   </button>
 
                   {canManageUsers(currentUser?.role) && (
@@ -336,22 +403,34 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsUserMenuOpen(false);
                         setActiveTab('users');
                       }}
-                      className="w-full p-2.5 rounded-xl text-left hover:bg-[#151517] text-[#E0E0E0] hover:text-white flex items-center gap-2 transition-colors cursor-pointer"
+                      className="w-full p-2.5 rounded-xl text-left hover:bg-[#18181C] text-[#E0E0E0] hover:text-white flex items-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      <Users className="w-4 h-4 text-[#F2A30F]" />
-                      <span>Gerenciar Usuários & Permissões</span>
+                      <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <span className="font-semibold">Gerenciar Usuários</span>
                     </button>
                   )}
 
+                  {/* Divider */}
+                  <div className="my-1 border-t border-[#1F1F24]" />
+
+                  {/* 4. Sair */}
                   <button
                     onClick={() => {
                       setIsUserMenuOpen(false);
                       onLogout();
                     }}
-                    className="w-full p-2.5 rounded-xl text-left hover:bg-red-950/40 text-red-400 hover:text-red-300 flex items-center gap-2 transition-colors cursor-pointer"
+                    className="w-full p-2.5 rounded-xl text-left hover:bg-red-950/40 text-red-400 hover:text-red-300 flex items-center justify-between transition-colors cursor-pointer group"
+                    id="user-menu-item-logout"
                   >
-                    <LogOut className="w-4 h-4" />
-                    <span>Trocar de Conta / Sair</span>
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">
+                        <LogOut className="w-4 h-4" />
+                      </div>
+                      <span className="font-bold">Sair</span>
+                    </div>
+                    <span className="text-[10px] text-red-400/80">Encerrar sessão</span>
                   </button>
                 </div>
               </div>
@@ -359,6 +438,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Render User Profile & Settings Modals */}
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        currentUser={currentUser}
+        onLogout={onLogout}
+      />
+
+      <UserSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        onOpenLogoCustomizer={() => setIsLogoModalOpen(true)}
+      />
 
       {/* Navigation Tabs */}
       <div className="bg-[#0A0A0B] border-t border-[#1F1F21] px-4 sm:px-6 lg:px-8">

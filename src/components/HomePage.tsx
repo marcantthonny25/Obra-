@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Package,
   ArrowRight,
@@ -20,8 +20,16 @@ import {
   PlusCircle,
   HardHat,
   Boxes,
+  User as UserIcon,
+  Settings,
+  Sun,
+  Moon,
+  LogOut,
+  ChevronDown,
 } from 'lucide-react';
 import type { User, MaterialItem, StockMovement, WorkSite } from '../types';
+import { UserProfileModal } from './UserProfileModal';
+import { UserSettingsModal } from './UserSettingsModal';
 
 interface HomePageProps {
   onNavigate: (tab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users') => void;
@@ -38,11 +46,43 @@ export const HomePage: React.FC<HomePageProps> = ({
   onNavigate,
   currentUser,
   onOpenAuthModal,
+  onLogout,
   materials = [],
   movements = [],
   worksites = [],
   onOpenQuickMovement,
 }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Theme state
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('hogar_theme') as 'dark' | 'light') || 'dark';
+  });
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('hogar_theme', nextTheme);
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light-mode');
+    } else {
+      document.documentElement.classList.remove('light-mode');
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Compute key indicators safely
   const totalMaterials = materials.length;
   const criticalStockCount = materials.filter((m) => m.quantity <= m.minQuantity).length;
@@ -84,27 +124,111 @@ export const HomePage: React.FC<HomePageProps> = ({
             </p>
           </div>
 
-          {/* User Status / Quick Switch action */}
+          {/* User Status / Profile Menu */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             {currentUser ? (
-              <div className="flex items-center gap-3 bg-[#141417]/90 backdrop-blur border border-[#26262A] p-2.5 rounded-2xl shadow-lg">
-                <div className="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-base">
-                  {currentUser.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="text-left text-xs pr-1">
-                  <span className="text-[#888888] text-[10px] block font-medium">Sessão Ativa</span>
-                  <span className="font-bold text-white block max-w-[140px] truncate">{currentUser.name}</span>
-                  <span className="text-emerald-400 font-semibold text-[11px] uppercase tracking-wider">{currentUser.role}</span>
-                </div>
+              <div className="relative" ref={menuRef}>
                 <button
-                  onClick={onOpenAuthModal}
-                  className="bg-[#1F1F24] hover:bg-emerald-600 hover:text-white text-emerald-400 border border-emerald-500/30 font-semibold p-2.5 rounded-xl text-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-sm ml-1"
-                  title="Trocar de usuário ou alterar conta"
-                  id="btn-trocar-usuario-dashboard"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="flex items-center gap-3 bg-[#141417]/90 hover:bg-[#1A1A1F] backdrop-blur border border-[#26262A] hover:border-emerald-500/40 p-2.5 rounded-2xl shadow-lg transition-all cursor-pointer text-left"
+                  id="btn-perfil-usuario-dashboard"
                 >
-                  <RefreshCw className="w-4 h-4 stroke-[2]" />
-                  <span className="hidden sm:inline">Trocar Conta</span>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black text-base flex items-center justify-center border border-emerald-400/40 shadow-sm">
+                    {currentUser.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="text-left text-xs pr-1">
+                    <span className="text-[#888888] text-[10px] block font-medium">Sessão Ativa</span>
+                    <span className="font-bold text-white block max-w-[130px] truncate">{currentUser.name}</span>
+                    <span className="text-emerald-400 font-semibold text-[11px] uppercase tracking-wider">{currentUser.role}</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-[#888888] transition-transform duration-200 ml-1 ${isMenuOpen ? 'rotate-180 text-emerald-400' : ''}`} />
                 </button>
+
+                {/* Profile Dropdown Menu */}
+                {isMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-72 bg-[#0F0F11] border border-[#222226] rounded-2xl shadow-2xl p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="p-3 bg-[#151517] border border-[#1F1F21] rounded-xl mb-2">
+                      <div className="text-xs font-bold text-white truncate">{currentUser.name}</div>
+                      <div className="text-[11px] text-emerald-400 font-semibold">{currentUser.role}</div>
+                      <div className="text-[10px] text-[#888888] truncate">{currentUser.email}</div>
+                    </div>
+
+                    <div className="space-y-1 text-xs">
+                      {/* 1. Meu Perfil */}
+                      <button
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsProfileModalOpen(true);
+                        }}
+                        className="w-full p-2.5 rounded-xl text-left hover:bg-[#18181C] text-[#E0E0E0] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <UserIcon className="w-4 h-4" />
+                          </div>
+                          <span className="font-semibold">Meu Perfil</span>
+                        </div>
+                        <span className="text-[10px] text-[#777777] group-hover:text-emerald-400">Detalhes</span>
+                      </button>
+
+                      {/* 2. Configurações */}
+                      <button
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsSettingsModalOpen(true);
+                        }}
+                        className="w-full p-2.5 rounded-xl text-left hover:bg-[#18181C] text-[#E0E0E0] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            <Settings className="w-4 h-4" />
+                          </div>
+                          <span className="font-semibold">Configurações</span>
+                        </div>
+                        <span className="text-[10px] text-[#777777] group-hover:text-blue-400">Sistema</span>
+                      </button>
+
+                      {/* 3. Tema Claro/Escuro */}
+                      <button
+                        onClick={() => toggleTheme()}
+                        className="w-full p-2.5 rounded-xl text-left hover:bg-[#18181C] text-[#E0E0E0] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                          </div>
+                          <span className="font-semibold">Tema Claro / Escuro</span>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#1F1F24] text-amber-400 border border-amber-500/30">
+                          {theme === 'dark' ? 'Escuro' : 'Claro'}
+                        </span>
+                      </button>
+
+                      <div className="my-1 border-t border-[#1F1F24]" />
+
+                      {/* 4. Sair */}
+                      <button
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          if (onLogout) {
+                            onLogout();
+                          } else {
+                            onOpenAuthModal();
+                          }
+                        }}
+                        className="w-full p-2.5 rounded-xl text-left hover:bg-red-950/40 text-red-400 hover:text-red-300 flex items-center justify-between transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">
+                            <LogOut className="w-4 h-4" />
+                          </div>
+                          <span className="font-bold">Sair</span>
+                        </div>
+                        <span className="text-[10px] text-red-400/80">Encerrar</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <button
@@ -461,6 +585,19 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
 
       </section>
+
+      {/* Render Modals */}
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        currentUser={currentUser}
+        onLogout={onLogout || onOpenAuthModal}
+      />
+
+      <UserSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
 
     </div>
   );
