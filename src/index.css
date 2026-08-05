@@ -1,10 +1,208 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --bg-main: #0A0A0B;
+    --text-main: #E0E0E0;
+    --color-scheme: dark;
+  }
+
+  html.light-mode,
+  [data-theme="light"] {
+    --bg-main: #F8FAFC;
+    --text-main: #0F172A;
+    --color-scheme: light;
+  }
+
   body {
-    background-color: #0A0A0B;
-    color: #E0E0E0;
-    color-scheme: dark;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    color-scheme: var(--color-scheme);
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
+
+/* ==========================================================================
+   LIGHT MODE SYSTEM OVERRIDES (Hogar Empreendimentos)
+   ========================================================================== */
+
+html.light-mode body {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
+/* Headers & Navigation Bars */
+html.light-mode header,
+html.light-mode .bg-\[\#0F0F11\],
+html.light-mode .bg-\[\#0A0A0B\],
+html.light-mode .bg-\[\#0B0B0C\] {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+/* Cards & Elevated Containers */
+html.light-mode .bg-\[\#111113\],
+html.light-mode .bg-\[\#151517\],
+html.light-mode .bg-\[\#141417\],
+html.light-mode .bg-\[\#161619\],
+html.light-mode .bg-\[\#18181C\],
+html.light-mode .bg-\[\#1A1A1F\],
+html.light-mode .bg-\[\#18181B\],
+html.light-mode .bg-\[\#1F1F24\],
+html.light-mode .bg-\[\#25252B\] {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+/* Secondary Backgrounds & Subtle Surfaces */
+html.light-mode .bg-\[\#121215\],
+html.light-mode .bg-\[\#131316\],
+html.light-mode .bg-\[\#1D1D22\] {
+  background-color: #F1F5F9 !important;
+}
+
+/* Hover States in Light Mode */
+html.light-mode .hover\:bg-\[\#18181C\]:hover,
+html.light-mode .hover\:bg-\[\#1A1A1F\]:hover,
+html.light-mode .hover\:bg-\[\#1F1F21\]:hover,
+html.light-mode .hover\:bg-\[\#151517\]\/50:hover,
+html.light-mode .hover\:bg-\[\#222226\]:hover {
+  background-color: #F1F5F9 !important;
+}
+
+/* Hero Welcome Banner Gradient Override */
+html.light-mode .bg-gradient-to-r.from-\[\#0F1D16\].via-\[\#0F0F11\].to-\[\#0A120D\],
+html.light-mode .bg-gradient-to-r.from-\[\#0F1D16\].to-\[\#141417\] {
+  background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 50%, #F0FDF4 100%) !important;
+  border-color: #A7F3D0 !important;
+}
+
+/* Borders in Light Mode */
+html.light-mode .border-\[\#1F1F21\],
+html.light-mode .border-\[\#222226\],
+html.light-mode .border-\[\#26262A\],
+html.light-mode .border-\[\#333333\],
+html.light-mode .border-\[\#1F1F24\],
+html.light-mode .border-\[\#2B2B30\],
+html.light-mode .border-\[\#2A2A2F\] {
+  border-color: #E2E8F0 !important;
+}
+
+/* Typography Overrides */
+html.light-mode .text-white {
+  color: #0F172A !important;
+}
+
+html.light-mode .text-\[\#E0E0E0\],
+html.light-mode .text-\[\#D0D0D0\],
+html.light-mode .text-\[\#CCCCCC\],
+html.light-mode .text-\[\#AAAAAA\] {
+  color: #334155 !important;
+}
+
+html.light-mode .text-\[\#888888\],
+html.light-mode .text-\[\#9E9E9E\],
+html.light-mode .text-\[\#777777\],
+html.light-mode .text-\[\#666666\],
+html.light-mode .text-\[\#808080\] {
+  color: #64748B !important;
+}
+
+/* Brand Accent Colors in Light Mode (High Contrast) */
+html.light-mode .text-emerald-400 {
+  color: #059669 !important;
+}
+
+html.light-mode .bg-emerald-600 {
+  background-color: #059669 !important;
+}
+
+html.light-mode .text-amber-400,
+html.light-mode .text-amber-300 {
+  color: #D97706 !important;
+}
+
+html.light-mode .text-blue-400 {
+  color: #2563EB !important;
+}
+
+html.light-mode .text-purple-400 {
+  color: #7C3AED !important;
+}
+
+html.light-mode .text-red-400 {
+  color: #DC2626 !important;
+}
+
+/* Inputs, Selects, Textareas & Form Controls */
+html.light-mode input:not([type="checkbox"]):not([type="radio"]),
+html.light-mode select,
+html.light-mode textarea {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+html.light-mode input::placeholder,
+html.light-mode textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+html.light-mode option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+/* Tables in Light Mode */
+html.light-mode table {
+  color: #0F172A !important;
+}
+
+html.light-mode thead tr,
+html.light-mode thead th {
+  background-color: #F8FAFC !important;
+  color: #475569 !important;
+  border-color: #E2E8F0 !important;
+}
+
+html.light-mode tbody tr {
+  border-color: #E2E8F0 !important;
+}
+
+html.light-mode tbody tr:hover {
+  background-color: #F1F5F9 !important;
+}
+
+/* Modals & Backdrop Overrides */
+html.light-mode .bg-black\/75,
+html.light-mode .bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+}
+
+html.light-mode .shadow-2xl,
+html.light-mode .shadow-xl {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Custom badges & chips */
+html.light-mode .bg-emerald-500\/10 {
+  background-color: #ECFDF5 !important;
+}
+
+html.light-mode .bg-amber-500\/10 {
+  background-color: #FFFBEB !important;
+}
+
+html.light-mode .bg-blue-500\/10 {
+  background-color: #EFF6FF !important;
+}
+
+html.light-mode .bg-purple-500\/10 {
+  background-color: #F5F3FF !important;
+}
+
+html.light-mode .bg-red-500\/10 {
+  background-color: #FEF2F2 !important;
+}
+
 

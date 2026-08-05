@@ -30,6 +30,7 @@ import {
   Moon,
 } from 'lucide-react';
 import { MaterialItem, User, WorkSite, canManageUsers, canCreateOrEditMovements, isWorksiteLockedRole } from '../types';
+import { useTheme } from '../context/ThemeContext';
 import { UserProfileModal } from './UserProfileModal';
 import { UserSettingsModal } from './UserSettingsModal';
 
@@ -72,21 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-  // Theme state ('dark' | 'light') persisted in localStorage
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return (localStorage.getItem('hogar_theme') as 'dark' | 'light') || 'dark';
-  });
-
-  const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    localStorage.setItem('hogar_theme', nextTheme);
-    if (nextTheme === 'light') {
-      document.documentElement.classList.add('light-mode');
-    } else {
-      document.documentElement.classList.remove('light-mode');
-    }
-  };
+  const { theme, toggleTheme } = useTheme();
 
   const isLockedWorksite = currentUser ? isWorksiteLockedRole(currentUser.role) : false;
   const canMove = currentUser ? canCreateOrEditMovements(currentUser.role) : true;

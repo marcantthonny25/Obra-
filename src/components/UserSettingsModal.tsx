@@ -12,7 +12,10 @@ import {
   Package,
   Wrench,
   Factory,
+  Sun,
+  Moon,
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 interface UserSettingsModalProps {
   isOpen: boolean;
@@ -25,6 +28,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
   onClose,
   onOpenLogoCustomizer,
 }) => {
+  const { theme, toggleTheme } = useTheme();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
 
@@ -79,6 +83,25 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
               >
                 <Camera className="w-4 h-4" />
                 <span>Alterar Logo</span>
+              </button>
+            </div>
+
+            <div
+              onClick={toggleTheme}
+              className="p-4 rounded-2xl bg-[#161619] border border-[#222226] flex items-center justify-between gap-4 cursor-pointer hover:border-emerald-500/30 transition-all"
+            >
+              <div>
+                <span className="font-bold text-white block">Tema da Interface</span>
+                <span className="text-[11px] text-[#888888]">
+                  Alternar entre o Tema Escuro Padronizado e o Tema Claro Moderno.
+                </span>
+              </div>
+              <button
+                type="button"
+                className="px-3.5 py-2 rounded-xl bg-[#222226] hover:bg-amber-500/20 text-amber-400 font-bold text-xs flex items-center gap-2 border border-amber-500/30 transition-colors shrink-0 cursor-pointer"
+              >
+                {theme === 'dark' ? <Moon className="w-4 h-4 text-amber-400" /> : <Sun className="w-4 h-4 text-amber-400" />}
+                <span>{theme === 'dark' ? 'Modo Escuro' : 'Modo Claro'}</span>
               </button>
             </div>
           </div>
