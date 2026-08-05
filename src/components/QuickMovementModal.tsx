@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Lock, CheckCircle2, Loader2 } from 'lucide-react';
 import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite, User, isWorksiteLockedRole } from '../types';
+import { sanitizeForFirestore } from '../lib/firebase';
 
 interface QuickMovementModalProps {
   isOpen: boolean;
@@ -158,7 +159,7 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
       }
 
       await onAddMovement(
-        movementPayload as Omit<StockMovement, 'id' | 'date'>,
+        sanitizeForFirestore(movementPayload) as Omit<StockMovement, 'id' | 'date'>,
         type === 'ENTRADA' && unitPrice ? parseFloat(unitPrice) : undefined
       );
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, runTransaction } from 'firebase/firestore';
-import { db } from './lib/firebase';
+import { db, sanitizeForFirestore, assertNoUndefined } from './lib/firebase';
 import { Navbar } from './components/Navbar';
 import { HomePage } from './components/HomePage';
 import { MaterialsView } from './components/MaterialsView';
@@ -20,16 +20,6 @@ import { INITIAL_MATERIALS, INITIAL_MOVEMENTS, INITIAL_WORKSITES } from './data/
 import { INITIAL_USERS } from './data/initialUsers';
 
 const LOCAL_STORAGE_KEY_CURRENT_USER = 'hogar_current_user_v2';
-
-const stripUndefined = <T extends Record<string, any>>(obj: T): T => {
-  const cleaned: Record<string, any> = {};
-  Object.keys(obj).forEach((key) => {
-    if (obj[key] !== undefined) {
-      cleaned[key] = obj[key];
-    }
-  });
-  return cleaned as T;
-};
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users'>('home');
@@ -129,16 +119,24 @@ export default function App() {
     if (confirm('Deseja carregar os dados de demonstração (usuários, insumos, movimentações e obras) no Firestore?')) {
       try {
         for (const u of INITIAL_USERS) {
-          await setDoc(doc(db, 'users', u.id), u);
+          const clean = sanitizeForFirestore(u);
+          assertNoUndefined(clean);
+          await setDoc(doc(db, 'users', u.id), clean);
         }
         for (const m of INITIAL_MATERIALS) {
-          await setDoc(doc(db, 'materials', m.id), m);
+          const clean = sanitizeForFirestore(m);
+          assertNoUndefined(clean);
+          await setDoc(doc(db, 'materials', m.id), clean);
         }
         for (const mov of INITIAL_MOVEMENTS) {
-          await setDoc(doc(db, 'movements', mov.id), mov);
+          const clean = sanitizeForFirestore(mov);
+          assertNoUndefined(clean);
+          await setDoc(doc(db, 'movements', mov.id), clean);
         }
         for (const w of INITIAL_WORKSITES) {
-          await setDoc(doc(db, 'worksites', w.id), w);
+          const clean = sanitizeForFirestore(w);
+          assertNoUndefined(clean);
+          await setDoc(doc(db, 'worksites', w.id), clean);
         }
         alert('Dados de demonstração carregados com sucesso no Firestore!');
       } catch (err) {
@@ -165,7 +163,9 @@ export default function App() {
 
   const handleRegisterUser = async (newUser: User) => {
     try {
-      await setDoc(doc(db, 'users', newUser.id), newUser);
+      const cleanUser = sanitizeForFirestore(newUser);
+      assertNoUndefined(cleanUser);
+      await setDoc(doc(db, 'users', newUser.id), cleanUser);
     } catch (err) {
       console.error('Error saving new user to Firestore:', err);
     }
@@ -173,7 +173,9 @@ export default function App() {
 
   const handleUpdateUser = async (updatedUser: User) => {
     try {
-      await setDoc(doc(db, 'users', updatedUser.id), updatedUser);
+      const cleanUser = sanitizeForFirestore(updatedUser);
+      assertNoUndefined(cleanUser);
+      await setDoc(doc(db, 'users', updatedUser.id), cleanUser);
       if (currentUser?.id === updatedUser.id) {
         setCurrentUser(updatedUser);
       }
@@ -211,11 +213,13 @@ export default function App() {
     updatedUnitPrice?: number
   ) => {
     const movId = `mov-${Date.now()}`;
-    const newMovement: StockMovement = stripUndefined({
+    const rawMovement: StockMovement = {
       ...movementData,
       id: movId,
       date: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
-    });
+    };
+    const newMovement = sanitizeForFirestore(rawMovement);
+    assertNoUndefined(newMovement);
 
     const materialRef = doc(db, 'materials', movementData.materialId);
     const movementRef = doc(db, 'movements', movId);
@@ -258,18 +262,23 @@ export default function App() {
         }
 
         // 5. Commit atomic writes
-        transaction.set(movementRef, newMovement);
-        transaction.update(materialRef, {
+        const matUpdate = sanitizeForFirestore({
           quantity: Math.max(0, newQty),
           avgUnitPrice: finalPrice,
           lastUpdated: new Date().toISOString().slice(0, 10),
         });
+        assertNoUndefined(matUpdate);
+
+        transaction.set(movementRef, newMovement);
+        transaction.update(materialRef, matUpdate);
 
         if (worksiteRef && worksiteSnap && worksiteSnap.exists()) {
           const currentSpent = worksiteSnap.data().totalSpentMaterials || 0;
-          transaction.update(worksiteRef, {
+          const siteUpdate = sanitizeForFirestore({
             totalSpentMaterials: currentSpent + (movementData.totalPrice || 0),
           });
+          assertNoUndefined(siteUpdate);
+          transaction.update(worksiteRef, siteUpdate);
         }
       });
       console.log(`[Firestore] Movimentação ${movId} gravada com sucesso em transação atômica.`);
@@ -285,11 +294,14 @@ export default function App() {
     id?: string
   ) => {
     const matId = id || `mat-${Date.now()}`;
-    const materialToSave: MaterialItem = stripUndefined({
+    const rawMaterial: MaterialItem = {
       ...materialData,
       id: matId,
       lastUpdated: new Date().toISOString().slice(0, 10),
-    });
+    };
+    const materialToSave = sanitizeForFirestore(rawMaterial);
+    assertNoUndefined(materialToSave);
+
     try {
       await setDoc(doc(db, 'materials', matId), materialToSave);
       console.log(`[Firestore] Insumo ${matId} salvo com sucesso no Firestore.`);
@@ -358,12 +370,16 @@ export default function App() {
           restoredQty -= newQty;
         }
 
-        const updatedMov: StockMovement = stripUndefined({ ...oldMovement, ...updatedData });
+        const updatedMov = sanitizeForFirestore({ ...oldMovement, ...updatedData });
+        assertNoUndefined(updatedMov);
 
-        transaction.update(materialRef, {
+        const matUpdate = sanitizeForFirestore({
           quantity: Math.max(0, restoredQty),
           lastUpdated: new Date().toISOString().slice(0, 10),
         });
+        assertNoUndefined(matUpdate);
+
+        transaction.update(materialRef, matUpdate);
         transaction.set(movementRef, updatedMov);
       });
       console.log(`[Firestore] Movimentação ${id} atualizada com sucesso em transação.`);
@@ -392,10 +408,12 @@ export default function App() {
           } else if (movToDelete.type === 'SAIDA' || movToDelete.type === 'AJUSTE') {
             adjustedQty += movToDelete.quantity;
           }
-          transaction.update(materialRef, {
+          const matUpdate = sanitizeForFirestore({
             quantity: adjustedQty,
             lastUpdated: new Date().toISOString().slice(0, 10),
           });
+          assertNoUndefined(matUpdate);
+          transaction.update(materialRef, matUpdate);
         }
         transaction.delete(movementRef);
       });
@@ -413,11 +431,13 @@ export default function App() {
   ) => {
     const siteId = id || `obra-${Date.now()}`;
     const existingSite = worksites.find((w) => w.id === siteId);
-    const siteToSave: WorkSite = {
+    const rawSite: WorkSite = {
       ...worksiteData,
       id: siteId,
       totalSpentMaterials: existingSite ? existingSite.totalSpentMaterials : 0,
     };
+    const siteToSave = sanitizeForFirestore(rawSite);
+    assertNoUndefined(siteToSave);
     await setDoc(doc(db, 'worksites', siteId), siteToSave);
   };
 
@@ -431,11 +451,12 @@ export default function App() {
     for (let idx = 0; idx < items.length; idx++) {
       const item = items[idx];
       const matId = `mat-ai-${Date.now()}-${idx}`;
-      const newMat: MaterialItem = {
+      const newMat = sanitizeForFirestore({
         ...item,
         id: matId,
         lastUpdated: new Date().toISOString().slice(0, 10),
-      };
+      });
+      assertNoUndefined(newMat);
       await setDoc(doc(db, 'materials', matId), newMat);
     }
   };
@@ -453,7 +474,7 @@ export default function App() {
 
       if (!mat) {
         matId = `mat-inv-${Date.now()}-${idx}`;
-        const newMat: MaterialItem = {
+        const newMat = sanitizeForFirestore({
           id: matId,
           code: `INS-${Math.floor(300 + Math.random() * 600)}`,
           name: item.name,
@@ -465,18 +486,20 @@ export default function App() {
           location: 'Almoxarifado Principal',
           supplier: 'Fornecedor Nota Fiscal',
           lastUpdated: new Date().toISOString().slice(0, 10),
-        };
+        });
+        assertNoUndefined(newMat);
         await setDoc(doc(db, 'materials', matId), newMat);
       } else {
-        const updatedMat: MaterialItem = {
+        const updatedMat = sanitizeForFirestore({
           ...mat,
           quantity: mat.quantity + item.quantity,
           avgUnitPrice: item.unitPrice ? item.unitPrice : mat.avgUnitPrice,
-        };
+        });
+        assertNoUndefined(updatedMat);
         await setDoc(doc(db, 'materials', matId), updatedMat);
       }
 
-      const newMov: StockMovement = {
+      const newMov = sanitizeForFirestore({
         id: `mov-inv-${Date.now()}-${idx}`,
         date: today,
         type: 'ENTRADA',
@@ -487,7 +510,8 @@ export default function App() {
         unitPrice: item.unitPrice || 0,
         totalPrice: (item.unitPrice || 0) * item.quantity,
         responsible: 'Importação Nota Fiscal IA',
-      };
+      });
+      assertNoUndefined(newMov);
       await setDoc(doc(db, 'movements', newMov.id), newMov);
     }
   };
@@ -499,13 +523,19 @@ export default function App() {
     worksites: WorkSite[];
   }) => {
     for (const mat of data.materials) {
-      await setDoc(doc(db, 'materials', mat.id), mat);
+      const clean = sanitizeForFirestore(mat);
+      assertNoUndefined(clean);
+      await setDoc(doc(db, 'materials', mat.id), clean);
     }
     for (const mov of data.movements) {
-      await setDoc(doc(db, 'movements', mov.id), mov);
+      const clean = sanitizeForFirestore(mov);
+      assertNoUndefined(clean);
+      await setDoc(doc(db, 'movements', mov.id), clean);
     }
     for (const site of data.worksites) {
-      await setDoc(doc(db, 'worksites', site.id), site);
+      const clean = sanitizeForFirestore(site);
+      assertNoUndefined(clean);
+      await setDoc(doc(db, 'worksites', site.id), clean);
     }
   };
 

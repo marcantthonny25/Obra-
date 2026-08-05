@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Trash2, Calendar, User, FileText, Building, CheckCircle2, Loader2 } from 'lucide-react';
 import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite } from '../types';
+import { sanitizeForFirestore } from '../lib/firebase';
 
 interface EditMovementModalProps {
   isOpen: boolean;
@@ -118,7 +119,7 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
         updatePayload.notes = notes.trim();
       }
 
-      await onSaveMovement(movement.id, updatePayload as Partial<StockMovement>);
+      await onSaveMovement(movement.id, sanitizeForFirestore(updatePayload) as Partial<StockMovement>);
 
       setSuccessMsg('Movimentação atualizada com sucesso no Firestore!');
       setTimeout(() => {

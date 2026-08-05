@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Package, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { MaterialCategory, MaterialItem } from '../types';
+import { sanitizeForFirestore } from '../lib/firebase';
 
 interface MaterialFormModalProps {
   isOpen: boolean;
@@ -158,7 +159,7 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
       }
 
       await onSaveMaterial(
-        materialPayload as Omit<MaterialItem, 'id' | 'lastUpdated'>,
+        sanitizeForFirestore(materialPayload) as Omit<MaterialItem, 'id' | 'lastUpdated'>,
         materialToEdit?.id
       );
 
