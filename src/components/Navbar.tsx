@@ -401,7 +401,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Navigation Tabs */}
       <div className="bg-[#0A0A0B] border-t border-[#1F1F21] px-4 sm:px-6 lg:px-8">
-        <div className="max-w-[1500px] mx-auto flex items-center justify-between gap-4">
+        <div className="max-w-[1500px] mx-auto flex items-center justify-between">
           <nav className="flex gap-1 overflow-x-auto no-scrollbar text-sm font-medium py-1">
             <button
               onClick={() => setActiveTab('home')}
@@ -489,37 +489,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
           </nav>
-
-          {/* Worksite Selector in Tab Navigation Bar */}
-          {isLockedWorksite ? (
-            <div
-              className="bg-[#151517] border border-amber-500/30 text-amber-300 px-3 py-1.5 rounded-xl flex items-center gap-2 shrink-0 shadow-sm"
-              title="Sua conta está vinculada exclusivamente a este canteiro de obras"
-            >
-              <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <div className="text-[11px] leading-tight hidden md:block">
-                <span className="font-bold text-amber-300 truncate max-w-[130px] inline-block">
-                  {currentUser?.worksiteAssigned || 'Canteiro Restrito'}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-[#151517] border border-[#222226] hover:border-emerald-500/40 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shrink-0 transition-colors hidden md:flex">
-              <Building2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <select
-                value={selectedWorksiteId}
-                onChange={(e) => onSelectWorksite(e.target.value)}
-                className="bg-transparent text-white font-semibold text-xs outline-none cursor-pointer pr-1"
-              >
-                <option value="ALL" className="bg-[#0F0F11] text-white">Todas as Obras (Global)</option>
-                {worksites.map((w) => (
-                  <option key={w.id} value={w.id} className="bg-[#0F0F11] text-white">
-                    {w.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
         </div>
       </div>
 
