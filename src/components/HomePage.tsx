@@ -100,158 +100,27 @@ export const HomePage: React.FC<HomePageProps> = ({
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-emerald-600/5 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold tracking-wide">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Hogar Empreendimentos • Painel de Controle Integrado</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
-              {currentUser ? (
-                <>
-                  Bem-vindo(a) de volta, <span className="text-emerald-400">{currentUser.name}</span>!
-                </>
-              ) : (
-                <>
-                  Plataforma Inteligente de <span className="text-emerald-400">Gestão de Obras & Estoque</span>
-                </>
-              )}
-            </h1>
-
-            <p className="text-sm sm:text-base text-[#9E9E9E] leading-relaxed">
-              Monitore materiais em tempo real, controle saídas para canteiros de obras e mantenha a rastreabilidade total do almoxarifado corporativo.
-            </p>
+        <div className="relative z-10 space-y-2 max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold tracking-wide">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Hogar Empreendimentos • Painel de Controle Integrado</span>
           </div>
 
-          {/* User Status / Profile Menu */}
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
             {currentUser ? (
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center gap-3 bg-[#141417]/90 hover:bg-[#1A1A1F] backdrop-blur border border-[#26262A] hover:border-emerald-500/40 p-2.5 rounded-2xl shadow-lg transition-all cursor-pointer text-left"
-                  id="btn-perfil-usuario-dashboard"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black text-base flex items-center justify-center border border-emerald-400/40 shadow-sm">
-                    {currentUser.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="text-left text-xs pr-1">
-                    <span className="text-[#888888] text-[10px] block font-medium">Sessão Ativa</span>
-                    <span className="font-bold text-white block max-w-[130px] truncate">{currentUser.name}</span>
-                    <span className="text-emerald-400 font-semibold text-[11px] uppercase tracking-wider">{currentUser.role}</span>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-[#888888] transition-transform duration-200 ml-1 ${isMenuOpen ? 'rotate-180 text-emerald-400' : ''}`} />
-                </button>
-
-                {/* Profile Dropdown Menu */}
-                {isMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-[#0F0F11] border border-[#222226] rounded-2xl shadow-2xl p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="p-3 bg-[#151517] border border-[#1F1F21] rounded-xl mb-2">
-                      <div className="text-xs font-bold text-white truncate">{currentUser.name}</div>
-                      <div className="text-[11px] text-emerald-400 font-semibold">{currentUser.role}</div>
-                      <div className="text-[10px] text-[#888888] truncate">{currentUser.email}</div>
-                    </div>
-
-                    <div className="space-y-1 text-xs">
-                      {/* 1. Meu Perfil */}
-                      <button
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          setIsProfileModalOpen(true);
-                        }}
-                        className="w-full p-2.5 rounded-xl text-left hover:bg-[#18181C] text-[#E0E0E0] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <UserIcon className="w-4 h-4" />
-                          </div>
-                          <span className="font-semibold">Meu Perfil</span>
-                        </div>
-                        <span className="text-[10px] text-[#777777] group-hover:text-emerald-400">Detalhes</span>
-                      </button>
-
-                      {/* 2. Configurações */}
-                      <button
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          setIsSettingsModalOpen(true);
-                        }}
-                        className="w-full p-2.5 rounded-xl text-left hover:bg-[#18181C] text-[#E0E0E0] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                            <Settings className="w-4 h-4" />
-                          </div>
-                          <span className="font-semibold">Configurações</span>
-                        </div>
-                        <span className="text-[10px] text-[#777777] group-hover:text-blue-400">Sistema</span>
-                      </button>
-
-                      {/* 3. Tema Claro/Escuro */}
-                      <button
-                        onClick={() => toggleTheme()}
-                        className="w-full p-2.5 rounded-xl text-left hover:bg-[#18181C] text-[#E0E0E0] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                            {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                          </div>
-                          <span className="font-semibold">Tema Claro / Escuro</span>
-                        </div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#1F1F24] text-amber-400 border border-amber-500/30">
-                          {theme === 'dark' ? 'Escuro' : 'Claro'}
-                        </span>
-                      </button>
-
-                      <div className="my-1 border-t border-[#1F1F24]" />
-
-                      {/* 4. Sair */}
-                      <button
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          if (onLogout) {
-                            onLogout();
-                          } else {
-                            onOpenAuthModal();
-                          }
-                        }}
-                        className="w-full p-2.5 rounded-xl text-left hover:bg-red-950/40 text-red-400 hover:text-red-300 flex items-center justify-between transition-colors cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">
-                            <LogOut className="w-4 h-4" />
-                          </div>
-                          <span className="font-bold">Sair</span>
-                        </div>
-                        <span className="text-[10px] text-red-400/80">Encerrar</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <>
+                Bem-vindo(a) de volta, <span className="text-emerald-400">{currentUser.name}</span>!
+              </>
             ) : (
-              <button
-                onClick={onOpenAuthModal}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 rounded-2xl text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-emerald-950/60 transition-all active:scale-95 cursor-pointer"
-                id="btn-login-dashboard"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Acessar Minha Conta / Login</span>
-              </button>
+              <>
+                Plataforma Inteligente de <span className="text-emerald-400">Gestão de Obras & Estoque</span>
+              </>
             )}
+          </h1>
 
-            {onOpenQuickMovement && (
-              <button
-                onClick={onOpenQuickMovement}
-                className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-3 rounded-2xl text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-amber-950/40 transition-all active:scale-95 cursor-pointer"
-                id="btn-quick-movement-dashboard"
-              >
-                <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-                <span>Lançar Movimentação</span>
-              </button>
-            )}
-          </div>
+          <p className="text-sm sm:text-base text-[#9E9E9E] leading-relaxed">
+            Monitore materiais em tempo real, controle saídas para canteiros de obras e mantenha a rastreabilidade total do almoxarifado corporativo.
+          </p>
         </div>
       </section>
 

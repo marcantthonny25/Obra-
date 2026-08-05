@@ -193,81 +193,28 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-black tracking-tight text-emerald-400 font-sans">
-                Hogar Empreendimentos
-              </h1>
-            </div>
+            <h1 className="text-lg sm:text-xl font-black tracking-tight text-emerald-400 font-sans leading-tight">
+              Hogar Empreendimentos
+            </h1>
             <p className="text-[11px] text-[#888888] hidden sm:block">Gestão de Insumos e Obras</p>
           </div>
         </div>
 
-        {/* Essential Navigation Controls: Worksite Filter, CTA & User Profile */}
-        <div className="flex items-center gap-2 sm:gap-3 text-xs shrink-0">
-          {/* Worksite Active Selector Control */}
-          {isLockedWorksite ? (
-            <div
-              className="bg-[#151517] border border-amber-500/30 text-amber-300 px-3 py-1.5 rounded-xl flex items-center gap-2 shrink-0 shadow-sm"
-              title="Sua conta está vinculada exclusivamente a este canteiro de obras"
-            >
-              <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <div className="text-[11px] leading-tight hidden sm:block">
-                <span className="text-[#888888] block text-[9px] uppercase font-bold">Obra Vinculada</span>
-                <span className="font-bold text-amber-300 truncate max-w-[130px] inline-block">
-                  {currentUser?.worksiteAssigned || 'Canteiro Restrito'}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-[#151517] border border-[#222226] hover:border-emerald-500/40 px-3 py-1.5 rounded-xl flex items-center gap-2 shrink-0 transition-colors">
-              <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <div className="text-[11px]">
-                <span className="text-[#888888] hidden sm:block text-[9px] uppercase font-bold">Filtrar por Obra</span>
-                <select
-                  value={selectedWorksiteId}
-                  onChange={(e) => onSelectWorksite(e.target.value)}
-                  className="bg-transparent text-white font-bold text-xs outline-none cursor-pointer pr-1"
-                >
-                  <option value="ALL" className="bg-[#0F0F11] text-white">Todas as Obras (Global)</option>
-                  {worksites.map((w) => (
-                    <option key={w.id} value={w.id} className="bg-[#0F0F11] text-white">
-                      {w.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* New Movement CTA Button */}
-          {canMove && (
-            <button
-              onClick={onOpenNewMovement}
-              className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-xs transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
-              id="btn-navbar-new-movement"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span className="hidden sm:inline">Lançar Movimentação</span>
-            </button>
-          )}
-
-          {/* USER PROFILE / AUTH BUTTON */}
+        {/* Right side: USER PROFILE MENU ONLY */}
+        <div className="flex items-center shrink-0">
           <div className="relative shrink-0" ref={userMenuRef}>
             {currentUser ? (
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="bg-[#151517] hover:bg-[#1A1A1F] border border-[#222226] hover:border-emerald-500/50 p-1.5 sm:px-3 sm:py-1.5 rounded-xl flex items-center gap-2 transition-all cursor-pointer text-left"
+                className="bg-[#151517] hover:bg-[#1A1A1F] border border-[#222226] hover:border-emerald-500/50 p-1.5 sm:px-3 sm:py-1.5 rounded-xl flex items-center gap-2 transition-all cursor-pointer text-left shadow-sm"
                 id="btn-navbar-user-avatar"
               >
                 <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-bold border border-emerald-400/40 flex items-center justify-center text-xs shadow-sm">
                   {currentUser.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden sm:block">
-                  <div className="text-xs font-bold text-white leading-tight truncate max-w-[110px]">
+                  <div className="text-xs font-bold text-white leading-tight truncate max-w-[120px]">
                     {currentUser.name}
-                  </div>
-                  <div className="text-[10px] text-emerald-400 font-medium leading-tight">
-                    {currentUser.role}
                   </div>
                 </div>
                 <ChevronDown className={`w-3.5 h-3.5 text-[#888888] transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180 text-emerald-400' : ''}`} />
@@ -422,93 +369,126 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Navigation Tabs */}
       <div className="bg-[#0A0A0B] border-t border-[#1F1F21] px-4 sm:px-6 lg:px-8">
-        <nav className="max-w-7xl mx-auto flex gap-1 overflow-x-auto no-scrollbar text-sm font-medium">
-          <button
-            onClick={() => setActiveTab('home')}
-            className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'home'
-                ? 'border-[#F2A30F] text-[#F2A30F] bg-[#151517]'
-                : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
-            }`}
-          >
-            <Home className="w-4 h-4 text-[#F2A30F]" />
-            Início (Home)
-          </button>
-
-          <button
-            onClick={() => setActiveTab('materials')}
-            className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'materials'
-                ? 'border-[#F2A30F] text-[#F2A30F] bg-[#151517]'
-                : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
-            }`}
-          >
-            <Package className="w-4 h-4" />
-            Catálogo de Insumos
-          </button>
-
-          <button
-            onClick={() => setActiveTab('movements')}
-            className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'movements'
-                ? 'border-[#F2A30F] text-[#F2A30F] bg-[#151517]'
-                : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
-            }`}
-          >
-            <ArrowRightLeft className="w-4 h-4" />
-            Movimentações (Entrada/Saída)
-          </button>
-
-          <button
-            onClick={() => setActiveTab('worksites')}
-            className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'worksites'
-                ? 'border-[#F2A30F] text-[#F2A30F] bg-[#151517]'
-                : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
-            }`}
-          >
-            <Building2 className="w-4 h-4" />
-            Canteiros de Obras
-          </button>
-
-          <button
-            onClick={() => setActiveTab('ai')}
-            className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'ai'
-                ? 'border-[#F2A30F] text-[#F2A30F] bg-[#151517]'
-                : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-[#F2A30F]" />
-            Assistente IA & Romaneio
-          </button>
-
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'analytics'
-                ? 'border-[#F2A30F] text-[#F2A30F] bg-[#151517]'
-                : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
-            }`}
-          >
-            <BarChart3 className="w-4 h-4" />
-            Relatórios & Análise
-          </button>
-
-          {canManageUsers(currentUser?.role) && (
+        <div className="max-w-[1500px] mx-auto flex items-center justify-between gap-4">
+          <nav className="flex gap-1 overflow-x-auto no-scrollbar text-sm font-medium py-1">
             <button
-              onClick={() => setActiveTab('users')}
-              className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
-                activeTab === 'users'
-                  ? 'border-[#F2A30F] text-[#F2A30F] bg-[#151517]'
+              onClick={() => setActiveTab('home')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
+                activeTab === 'home'
+                  ? 'border-emerald-400 text-emerald-400 bg-[#151517] rounded-t-lg'
                   : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
               }`}
             >
-              <Users className="w-4 h-4 text-[#F2A30F]" />
-              Gerenciar Usuários
+              <Home className="w-4 h-4 text-emerald-400" />
+              Início
             </button>
+
+            <button
+              onClick={() => setActiveTab('materials')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
+                activeTab === 'materials'
+                  ? 'border-emerald-400 text-emerald-400 bg-[#151517] rounded-t-lg'
+                  : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
+              }`}
+            >
+              <Package className="w-4 h-4" />
+              Catálogo de Insumos
+            </button>
+
+            <button
+              onClick={() => setActiveTab('movements')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
+                activeTab === 'movements'
+                  ? 'border-emerald-400 text-emerald-400 bg-[#151517] rounded-t-lg'
+                  : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
+              }`}
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+              Movimentações
+            </button>
+
+            <button
+              onClick={() => setActiveTab('worksites')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
+                activeTab === 'worksites'
+                  ? 'border-emerald-400 text-emerald-400 bg-[#151517] rounded-t-lg'
+                  : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
+              }`}
+            >
+              <Building2 className="w-4 h-4" />
+              Canteiros de Obras
+            </button>
+
+            <button
+              onClick={() => setActiveTab('ai')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
+                activeTab === 'ai'
+                  ? 'border-emerald-400 text-emerald-400 bg-[#151517] rounded-t-lg'
+                  : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              Assistente IA
+            </button>
+
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
+                activeTab === 'analytics'
+                  ? 'border-emerald-400 text-emerald-400 bg-[#151517] rounded-t-lg'
+                  : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              Relatórios
+            </button>
+
+            {canManageUsers(currentUser?.role) && (
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
+                  activeTab === 'users'
+                    ? 'border-emerald-400 text-emerald-400 bg-[#151517] rounded-t-lg'
+                    : 'border-transparent text-[#888888] hover:text-white hover:bg-[#151517]/50'
+                }`}
+              >
+                <Users className="w-4 h-4 text-emerald-400" />
+                Usuários
+              </button>
+            )}
+          </nav>
+
+          {/* Worksite Selector in Tab Navigation Bar */}
+          {isLockedWorksite ? (
+            <div
+              className="bg-[#151517] border border-amber-500/30 text-amber-300 px-3 py-1.5 rounded-xl flex items-center gap-2 shrink-0 shadow-sm"
+              title="Sua conta está vinculada exclusivamente a este canteiro de obras"
+            >
+              <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <div className="text-[11px] leading-tight hidden md:block">
+                <span className="font-bold text-amber-300 truncate max-w-[130px] inline-block">
+                  {currentUser?.worksiteAssigned || 'Canteiro Restrito'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-[#151517] border border-[#222226] hover:border-emerald-500/40 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shrink-0 transition-colors hidden md:flex">
+              <Building2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <select
+                value={selectedWorksiteId}
+                onChange={(e) => onSelectWorksite(e.target.value)}
+                className="bg-transparent text-white font-semibold text-xs outline-none cursor-pointer pr-1"
+              >
+                <option value="ALL" className="bg-[#0F0F11] text-white">Todas as Obras (Global)</option>
+                {worksites.map((w) => (
+                  <option key={w.id} value={w.id} className="bg-[#0F0F11] text-white">
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
-        </nav>
+        </div>
       </div>
 
       {/* LOGO CUSTOMIZATION MODAL */}
