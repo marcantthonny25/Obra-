@@ -76,34 +76,34 @@
 html.light-mode,
 [data-theme="light"] {
   /* Canvas & Application Shell - Clean, quiet neutral background */
-  --bg-app: #F5F7FA;
+  --bg-app: #F8FAFC;
   --bg-header: #FFFFFF;
 
   /* Surfaces & Containers - Crisp white cards with soft, subtle boundaries */
   --bg-surface: #FFFFFF;
   --bg-surface-elevated: #FFFFFF;
   --bg-surface-secondary: #F8FAFC;
-  --bg-panel: #F8FAFC;
+  --bg-panel: #FAFAFA;
   --bg-hover: #F1F5F9;
   --bg-active: #F1F5F9;
 
-  /* Form Controls - Refined light slate inputs with clean emerald focus ring */
+  /* Form Controls - Soft light slate inputs with clean emerald focus ring */
   --bg-input: #FAFAFA;
   --bg-input-hover: #FFFFFF;
-  --border-input: #DDE1E6;
-  --border-input-hover: #C1C7CD;
+  --border-input: #E2E5E9;
+  --border-input-hover: #CBD5E1;
   --border-input-focus: #059669;
   --ring-focus: rgba(5, 150, 105, 0.12);
 
-  /* Borders - Minimal, discreet hairlines */
-  --border-main: #E5E8EB;
-  --border-subtle: #EDF0F2;
+  /* Borders - Soft, ultra-light gray hairlines */
+  --border-main: #EEF0F2;
+  --border-subtle: #F3F5F7;
 
-  /* Typography - High WCAG contrast Slate palette (#111827 / #4B5563 / #6B7280) */
-  --text-primary: #111827;
-  --text-main: #111827;
-  --text-secondary: #4B5563;
-  --text-muted: #6B7280;
+  /* Typography - Softer Slate palette (#1E293B / #475569 / #64748B) */
+  --text-primary: #1E293B;
+  --text-main: #1E293B;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
 
   /* Accent Emerald (Institutional Brand Accent - Used selectively) */
   --accent-emerald: #059669;
@@ -119,26 +119,26 @@ html.light-mode,
   --accent-amber-border: #FEF3C7;
 
   /* Status Accents - Discreet, professional badge tones */
-  --accent-blue: #1D4ED8;
+  --accent-blue: #2563EB;
   --accent-blue-bg: #F0F9FF;
   --accent-blue-border: #E0F2FE;
 
-  --accent-purple: #6D28D9;
+  --accent-purple: #7C3AED;
   --accent-purple-bg: #FAF5FF;
   --accent-purple-border: #F3E8FF;
 
-  --accent-red: #B91C1C;
+  --accent-red: #DC2626;
   --accent-red-bg: #FEF2F2;
   --accent-red-border: #FEE2E2;
 
-  /* Shadows - Minimal organic multi-layer drop shadows for subtle elevation */
-  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
-  --shadow-header: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  /* Shadows - Minimal organic drop shadows for light elevation */
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  --shadow-header: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
 
-  /* Banners & Hero Panels - Subtle white card with a clean hairline border */
+  /* Banners & Hero Panels - Clean white surface with soft border */
   --bg-hero: #FFFFFF;
-  --border-hero: #E5E8EB;
+  --border-hero: #EEF0F2;
 
   --color-scheme: light;
 }
@@ -428,3 +428,21 @@ html.light-mode,
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* Softer Icon Contrast & Generous Breathing Space in Light Mode */
+html.light-mode svg.lucide,
+html.light-mode button svg,
+html.light-mode label svg,
+html.light-mode .text-slate-400 svg,
+html.light-mode .text-gray-400 svg,
+html.light-mode .text-zinc-400 svg {
+  stroke-width: 1.8px;
+  opacity: 0.88;
+}
+
+html.light-mode table td,
+html.light-mode table th {
+  padding-top: 0.875rem;
+  padding-bottom: 0.875rem;
+}
+
