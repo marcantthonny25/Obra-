@@ -4,8 +4,11 @@
    DESIGN TOKENS SYSTEM - HOGAR EMPREENDIMENTOS
    ========================================================================== */
 
+/* --------------------------------------------------------------------------
+   DARK THEME TOKENS (Reference standard for Dark Mode)
+   -------------------------------------------------------------------------- */
 :root {
-  /* Canvas & Application Shell */
+  /* Canvas & Shell */
   --bg-app: #0A0A0B;
   --bg-header: #0A0A0B;
 
@@ -61,25 +64,28 @@
   --accent-red-bg: rgba(239, 68, 68, 0.1);
   --accent-red-border: rgba(239, 68, 68, 0.2);
 
-  /* Shadows & Highlights */
+  /* Shadows & Elevation */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5);
   --shadow-header: none;
   --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
 
-  /* Hero & AI Gradient */
+  /* Hero & Feature Panels */
   --bg-hero: linear-gradient(135deg, #0F1D16 0%, #0F0F11 50%, #0A120D 100%);
   --border-hero: #1F1F21;
 
   --color-scheme: dark;
 }
 
+/* --------------------------------------------------------------------------
+   LIGHT THEME DESIGN TOKENS (Built From Scratch - Pure Corporate Light System)
+   -------------------------------------------------------------------------- */
 html.light-mode,
 [data-theme="light"] {
-  /* Canvas & Application Shell - Clean, quiet neutral background */
+  /* Canvas & Application Shell - Quiet off-white neutral background */
   --bg-app: #F8FAFC;
   --bg-header: #FFFFFF;
 
-  /* Surfaces & Containers - Crisp white cards with soft, subtle boundaries */
+  /* Surfaces & Containers - Crisp white cards with soft boundaries */
   --bg-surface: #FFFFFF;
   --bg-surface-elevated: #FFFFFF;
   --bg-surface-secondary: #F8FAFC;
@@ -87,7 +93,7 @@ html.light-mode,
   --bg-hover: #F1F5F9;
   --bg-active: #F1F5F9;
 
-  /* Form Controls - Soft light slate inputs with clean emerald focus ring */
+  /* Form Controls - Light slate inputs with subtle hairline borders */
   --bg-input: #FAFAFA;
   --bg-input-hover: #FFFFFF;
   --border-input: #E2E5E9;
@@ -99,26 +105,26 @@ html.light-mode,
   --border-main: #EEF0F2;
   --border-subtle: #F3F5F7;
 
-  /* Typography - Softer Slate palette (#1E293B / #475569 / #64748B) */
+  /* Typography - Softer Slate palette for high WCAG compliance and comfort */
   --text-primary: #1E293B;
   --text-main: #1E293B;
   --text-secondary: #475569;
   --text-muted: #64748B;
 
-  /* Accent Emerald (Institutional Brand Accent - Used selectively) */
+  /* Accent Emerald - Institutional Brand Highlight */
   --accent-emerald: #059669;
   --accent-emerald-dark: #047857;
   --accent-emerald-bg: #F0FDF4;
   --accent-emerald-border: #DCFCE7;
 
-  /* Accent Amber (Primary Action CTA) */
+  /* Accent Amber - Primary CTA Button Accent */
   --accent-amber: #F2A30F;
   --accent-amber-hover: #E09307;
   --accent-amber-text: #B45309;
   --accent-amber-bg: #FFFBEB;
   --accent-amber-border: #FEF3C7;
 
-  /* Status Accents - Discreet, professional badge tones */
+  /* Status Accents - Muted, professional status badges */
   --accent-blue: #2563EB;
   --accent-blue-bg: #F0F9FF;
   --accent-blue-border: #E0F2FE;
@@ -131,12 +137,12 @@ html.light-mode,
   --accent-red-bg: #FEF2F2;
   --accent-red-border: #FEE2E2;
 
-  /* Shadows - Minimal organic drop shadows for light elevation */
+  /* Shadows - Ambient multi-layer drop shadows for light depth */
   --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
   --shadow-header: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
   --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
 
-  /* Banners & Hero Panels - Clean white surface with soft border */
+  /* Hero & Feature Banners - Pure white card surface */
   --bg-hero: #FFFFFF;
   --border-hero: #EEF0F2;
 
@@ -144,7 +150,7 @@ html.light-mode,
 }
 
 /* ==========================================================================
-   BASE & COMPONENT MAPPINGS (Driven by Design Tokens)
+   BASE & COMPONENT MAPPINGS (Driven Entirely by Design Tokens)
    ========================================================================== */
 
 @layer base {
@@ -383,7 +389,7 @@ html.light-mode,
 /* Modals & Backdrops */
 .bg-black\/75,
 .bg-black\/80 {
-  background-color: rgba(15, 23, 42, 0.45);
+  background-color: rgba(15, 23, 42, 0.35);
   backdrop-filter: blur(4px);
 }
 
@@ -445,4 +451,3 @@ html.light-mode table th {
   padding-top: 0.875rem;
   padding-bottom: 0.875rem;
 }
-
