@@ -92,21 +92,21 @@ export const HomePage: React.FC<HomePageProps> = ({
   const recentMovements = movements.slice(0, 4);
 
   return (
-    <div className="w-full min-h-[calc(100vh-80px)] bg-[#0B0B0C] text-[#E0E0E0] select-none py-6 px-4 sm:px-6 lg:px-8 space-y-8 max-w-[1500px] mx-auto">
+    <div className="w-full min-h-[calc(100vh-80px)] bg-[#0B0B0C] text-[#E0E0E0] select-none py-4 sm:py-5 px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6 max-w-[1500px] mx-auto">
       
-      {/* 1. Header Hero Welcome Banner */}
-      <section id="dashboard-hero-header" className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0F1D16] via-[#0F0F11] to-[#0A120D] border border-emerald-500/20 p-6 sm:p-8 shadow-2xl">
+      {/* 1. Compact Header Hero Welcome Banner (~30% smaller height) */}
+      <section id="dashboard-hero-header" className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0F1D16] via-[#0F0F11] to-[#0A120D] border border-emerald-500/20 p-4 sm:p-5 shadow-xl">
         {/* Subtle decorative background elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-emerald-600/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+        <div className="absolute bottom-0 left-1/3 w-48 h-48 bg-emerald-600/5 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 space-y-2 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold tracking-wide">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <div className="relative z-10 space-y-1.5 max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-semibold tracking-wide">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>Hogar Empreendimentos • Painel de Controle Integrado</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
             {currentUser ? (
               <>
                 Bem-vindo(a) de volta, <span className="text-emerald-400">{currentUser.name}</span>!
@@ -118,63 +118,63 @@ export const HomePage: React.FC<HomePageProps> = ({
             )}
           </h1>
 
-          <p className="text-sm sm:text-base text-[#9E9E9E] leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#9E9E9E] leading-relaxed">
             Monitore materiais em tempo real, controle saídas para canteiros de obras e mantenha a rastreabilidade total do almoxarifado corporativo.
           </p>
         </div>
       </section>
 
-      {/* 2. Top Summary KPI Cards (Fast indicators) */}
-      <section id="dashboard-kpi-summary" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#111113] border border-[#222226] hover:border-emerald-500/30 p-5 rounded-2xl transition-all shadow-md flex items-center justify-between">
+      {/* 2. Top Summary KPI Cards (Compact fast indicators) */}
+      <section id="dashboard-kpi-summary" className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-[#111113] border border-[#222226] hover:border-emerald-500/30 p-3.5 sm:p-4 rounded-xl transition-all shadow-md flex items-center justify-between">
           <div>
-            <span className="text-xs font-medium text-[#888888] block">Insumos Cadastrados</span>
-            <div className="text-2xl font-black text-white mt-1">{totalMaterials}</div>
-            <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1 mt-1">
+            <span className="text-[11px] font-medium text-[#888888] block">Insumos Cadastrados</span>
+            <div className="text-xl sm:text-2xl font-black text-white mt-0.5">{totalMaterials}</div>
+            <span className="text-[10px] sm:text-[11px] text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
               <Boxes className="w-3 h-3" /> Catálogo Atualizado
             </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <Package className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <Package className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-[#111113] border border-[#222226] hover:border-amber-500/30 p-5 rounded-2xl transition-all shadow-md flex items-center justify-between">
+        <div className="bg-[#111113] border border-[#222226] hover:border-amber-500/30 p-3.5 sm:p-4 rounded-xl transition-all shadow-md flex items-center justify-between">
           <div>
-            <span className="text-xs font-medium text-[#888888] block">Estoque Crítico / Mínimo</span>
-            <div className="text-2xl font-black text-white mt-1">{criticalStockCount}</div>
-            <span className={`text-[11px] font-medium flex items-center gap-1 mt-1 ${criticalStockCount > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+            <span className="text-[11px] font-medium text-[#888888] block">Estoque Crítico / Mínimo</span>
+            <div className="text-xl sm:text-2xl font-black text-white mt-0.5">{criticalStockCount}</div>
+            <span className={`text-[10px] sm:text-[11px] font-medium flex items-center gap-1 mt-0.5 ${criticalStockCount > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
               <AlertTriangle className="w-3 h-3" /> {criticalStockCount > 0 ? 'Requer Atenção' : 'Estoque regular'}
             </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-            <AlertTriangle className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+            <AlertTriangle className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-[#111113] border border-[#222226] hover:border-blue-500/30 p-5 rounded-2xl transition-all shadow-md flex items-center justify-between">
+        <div className="bg-[#111113] border border-[#222226] hover:border-blue-500/30 p-3.5 sm:p-4 rounded-xl transition-all shadow-md flex items-center justify-between">
           <div>
-            <span className="text-xs font-medium text-[#888888] block">Canteiros Ativos</span>
-            <div className="text-2xl font-black text-white mt-1">{activeWorksitesCount}</div>
-            <span className="text-[11px] text-blue-400 font-medium flex items-center gap-1 mt-1">
+            <span className="text-[11px] font-medium text-[#888888] block">Canteiros Ativos</span>
+            <div className="text-xl sm:text-2xl font-black text-white mt-0.5">{activeWorksitesCount}</div>
+            <span className="text-[10px] sm:text-[11px] text-blue-400 font-medium flex items-center gap-1 mt-0.5">
               <Building2 className="w-3 h-3" /> Obras sob gestão
             </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-            <Building2 className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+            <Building2 className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-[#111113] border border-[#222226] hover:border-emerald-500/30 p-5 rounded-2xl transition-all shadow-md flex items-center justify-between">
+        <div className="bg-[#111113] border border-[#222226] hover:border-emerald-500/30 p-3.5 sm:p-4 rounded-xl transition-all shadow-md flex items-center justify-between">
           <div>
-            <span className="text-xs font-medium text-[#888888] block">Movimentações Registradas</span>
-            <div className="text-2xl font-black text-white mt-1">{totalMovementsCount}</div>
-            <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1 mt-1">
+            <span className="text-[11px] font-medium text-[#888888] block">Movimentações Registradas</span>
+            <div className="text-xl sm:text-2xl font-black text-white mt-0.5">{totalMovementsCount}</div>
+            <span className="text-[10px] sm:text-[11px] text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
               <TrendingUp className="w-3 h-3" /> Entradas & Saídas
             </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <Activity className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <Activity className="w-5 h-5" />
           </div>
         </div>
       </section>

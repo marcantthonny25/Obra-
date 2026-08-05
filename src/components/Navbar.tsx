@@ -200,8 +200,40 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Right side: USER PROFILE MENU ONLY */}
-        <div className="flex items-center shrink-0">
+        {/* Right side: Worksite Selector & User Profile Menu */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Worksite Active Selector Control */}
+          {isLockedWorksite ? (
+            <div
+              className="bg-[#151517] border border-amber-500/30 text-amber-300 px-3 py-1.5 rounded-xl flex items-center gap-2 shrink-0 shadow-sm"
+              title="Sua conta está vinculada exclusivamente a este canteiro de obras"
+            >
+              <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <div className="text-[11px] leading-tight hidden sm:block">
+                <span className="font-bold text-amber-300 truncate max-w-[130px] inline-block">
+                  {currentUser?.worksiteAssigned || 'Canteiro Restrito'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-[#151517] border border-[#222226] hover:border-emerald-500/40 px-2.5 py-1.5 rounded-xl flex items-center gap-2 shrink-0 transition-colors">
+              <Building2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <select
+                value={selectedWorksiteId}
+                onChange={(e) => onSelectWorksite(e.target.value)}
+                className="bg-transparent text-white font-semibold text-xs outline-none cursor-pointer pr-1"
+                id="select-worksite-header"
+              >
+                <option value="ALL" className="bg-[#0F0F11] text-white">Todas as Obras (Global)</option>
+                {worksites.map((w) => (
+                  <option key={w.id} value={w.id} className="bg-[#0F0F11] text-white">
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="relative shrink-0" ref={userMenuRef}>
             {currentUser ? (
               <button
