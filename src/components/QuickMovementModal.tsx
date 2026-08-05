@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Lock } from 'lucide-react';
+import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Lock, CheckCircle2, Loader2 } from 'lucide-react';
 import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite, User, isWorksiteLockedRole } from '../types';
 
 interface QuickMovementModalProps {
@@ -8,7 +8,7 @@ interface QuickMovementModalProps {
   materials: MaterialItem[];
   worksites: WorkSite[];
   preSelectedMaterialId?: string;
-  onAddMovement: (movement: Omit<StockMovement, 'id' | 'date'>, updatedUnitPrice?: number) => void;
+  onAddMovement: (movement: Omit<StockMovement, 'id' | 'date'>, updatedUnitPrice?: number) => Promise<void> | void;
   defaultResponsible?: string;
   currentUser?: User | null;
   selectedWorksiteId?: string;
@@ -50,9 +50,15 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
   const [notes, setNotes] = useState<string>('');
   const [itemDetail, setItemDetail] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [successMsg, setSuccessMsg] = useState<string>('');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Auto-set initial worksite
   useEffect(() => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    setIsSaving(false);
+
     if (isOpen) {
       if (selectedWorksiteId && selectedWorksiteId !== 'ALL') {
         setWorkSiteId(selectedWorksiteId);
@@ -86,9 +92,10 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setSuccessMsg('');
 
     if (!selectedMaterial) {
       setErrorMsg('Selecione um insumo válido.');
@@ -103,7 +110,7 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
 
     if ((type === 'SAIDA' || type === 'AJUSTE') && qty > selectedMaterial.quantity) {
       setErrorMsg(
-        `Quantidade insuficiente em estoque! Saldo atual: ${selectedMaterial.quantity} ${selectedMaterial.unit}.`
+        `Quantidade insuficiente em estoque! Saldo atual no sistema: ${selectedMaterial.quantity} ${selectedMaterial.unit}.`
       );
       return;
     }
@@ -116,31 +123,43 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
     const price = unitPrice ? parseFloat(unitPrice) : selectedMaterial.avgUnitPrice;
     const selectedWorksite = worksites.find((w) => w.id === workSiteId);
 
-    onAddMovement(
-      {
-        type,
-        materialId: selectedMaterial.id,
-        materialName: selectedMaterial.name,
-        itemDetail: itemDetail.trim() ? itemDetail.trim() : undefined,
-        quantity: qty,
-        unit: selectedMaterial.unit,
-        unitPrice: price,
-        totalPrice: price * qty,
-        workSiteId: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.id : undefined,
-        workSiteName: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.name : undefined,
-        workPhase: (type === 'SAIDA' || type === 'DEVOLUCAO') ? workPhase : undefined,
-        invoiceNumber: type === 'ENTRADA' ? invoiceNumber : undefined,
-        responsible: responsible.trim(),
-        notes: notes.trim(),
-      },
-      type === 'ENTRADA' && unitPrice ? parseFloat(unitPrice) : undefined
-    );
+    setIsSaving(true);
 
-    // Reset and close
-    setQuantity('');
-    setNotes('');
-    setInvoiceNumber('');
-    onClose();
+    try {
+      await onAddMovement(
+        {
+          type,
+          materialId: selectedMaterial.id,
+          materialName: selectedMaterial.name,
+          itemDetail: itemDetail.trim() ? itemDetail.trim() : undefined,
+          quantity: qty,
+          unit: selectedMaterial.unit,
+          unitPrice: price,
+          totalPrice: price * qty,
+          workSiteId: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.id : undefined,
+          workSiteName: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.name : undefined,
+          workPhase: (type === 'SAIDA' || type === 'DEVOLUCAO') ? workPhase : undefined,
+          invoiceNumber: type === 'ENTRADA' ? invoiceNumber : undefined,
+          responsible: responsible.trim(),
+          notes: notes.trim(),
+        },
+        type === 'ENTRADA' && unitPrice ? parseFloat(unitPrice) : undefined
+      );
+
+      // Display success message ONLY AFTER Firestore transaction succeeds
+      setSuccessMsg('Movimentação gravada e estoque atualizado com sucesso no Firestore!');
+      setTimeout(() => {
+        setIsSaving(false);
+        setQuantity('');
+        setNotes('');
+        setInvoiceNumber('');
+        onClose();
+      }, 800);
+    } catch (err: any) {
+      console.error('[QuickMovementModal Error] Erro ao gravar movimentação no Firestore:', err);
+      setErrorMsg(err?.message || 'Erro ao gravar a movimentação no banco de dados Firestore.');
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -174,6 +193,13 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
             <div className="p-3 bg-red-950/40 border border-red-500/30 text-red-400 rounded-lg flex items-start gap-2 text-xs">
               <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 rounded-lg flex items-center gap-2 text-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{successMsg}</span>
             </div>
           )}
 
@@ -435,15 +461,24 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-[#1F1F21] bg-[#151517] rounded-lg text-[#E0E0E0] hover:text-white hover:bg-[#1F1F21] font-medium text-xs transition-colors cursor-pointer"
+              disabled={isSaving}
+              className="px-4 py-2 border border-[#1F1F21] bg-[#151517] rounded-lg text-[#E0E0E0] hover:text-white hover:bg-[#1F1F21] font-medium text-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-[#F2A30F] hover:bg-amber-400 text-black font-bold rounded-lg text-xs shadow-md active:scale-95 transition-all cursor-pointer"
+              disabled={isSaving}
+              className="px-5 py-2 bg-[#F2A30F] hover:bg-amber-400 disabled:bg-amber-600/50 text-black font-bold rounded-lg text-xs shadow-md active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
             >
-              Confirmar Lançamento
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Gravando no Firestore...</span>
+                </>
+              ) : (
+                <span>Confirmar Lançamento</span>
+              )}
             </button>
           </div>
         </form>

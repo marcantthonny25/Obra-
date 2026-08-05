@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, doc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, onSnapshot, runTransaction } from 'firebase/firestore';
 import { db } from './lib/firebase';
 import { Navbar } from './components/Navbar';
 import { HomePage } from './components/HomePage';
@@ -195,50 +195,77 @@ export default function App() {
     setIsQuickMovementOpen(true);
   };
 
-  // Add a Stock Movement (sync to Firestore)
+  // Add a Stock Movement (Atomic runTransaction in Firestore)
   const handleAddMovement = async (
     movementData: Omit<StockMovement, 'id' | 'date'>,
     updatedUnitPrice?: number
   ) => {
+    const movId = `mov-${Date.now()}`;
     const newMovement: StockMovement = {
       ...movementData,
-      id: `mov-${Date.now()}`,
+      id: movId,
       date: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
     };
 
-    // Save movement to Firestore
-    await setDoc(doc(db, 'movements', newMovement.id), newMovement);
+    const materialRef = doc(db, 'materials', movementData.materialId);
+    const movementRef = doc(db, 'movements', movId);
+    const worksiteRef = (movementData.type === 'SAIDA' && movementData.workSiteId) 
+      ? doc(db, 'worksites', movementData.workSiteId) 
+      : null;
 
-    // Update Material Stock Quantity in Firestore
-    const targetMaterial = materials.find((m) => m.id === movementData.materialId);
-    if (targetMaterial) {
-      let newQty = targetMaterial.quantity;
-      if (movementData.type === 'ENTRADA' || movementData.type === 'DEVOLUCAO') {
-        newQty += movementData.quantity;
-      } else if (movementData.type === 'SAIDA' || movementData.type === 'AJUSTE') {
-        newQty = Math.max(0, newQty - movementData.quantity);
-      }
+    try {
+      await runTransaction(db, async (transaction) => {
+        // 1. Read Material doc inside transaction to ensure fresh & atomic data
+        const matSnap = await transaction.get(materialRef);
+        if (!matSnap.exists()) {
+          throw new Error(`Insumo (ID: ${movementData.materialId}) não encontrado no banco de dados.`);
+        }
 
-      const updatedMat: MaterialItem = {
-        ...targetMaterial,
-        quantity: newQty,
-        avgUnitPrice: updatedUnitPrice !== undefined ? updatedUnitPrice : targetMaterial.avgUnitPrice,
-        lastUpdated: new Date().toISOString().slice(0, 10),
-      };
+        const matData = matSnap.data() as MaterialItem;
+        const currentQty = matData.quantity || 0;
 
-      await setDoc(doc(db, 'materials', updatedMat.id), updatedMat);
-    }
+        // 2. Prevent negative stock balance on exit/adjustment movements
+        if ((movementData.type === 'SAIDA' || movementData.type === 'AJUSTE') && movementData.quantity > currentQty) {
+          throw new Error(
+            `Saldo insuficiente em estoque no Firestore! Saldo atual: ${currentQty} ${matData.unit || ''}. Quantidade solicitada: ${movementData.quantity}.`
+          );
+        }
 
-    // If SAIDA with Worksite, update Worksite total spent in Firestore
-    if (movementData.type === 'SAIDA' && movementData.workSiteId && movementData.totalPrice) {
-      const targetSite = worksites.find((w) => w.id === movementData.workSiteId);
-      if (targetSite) {
-        const updatedSite: WorkSite = {
-          ...targetSite,
-          totalSpentMaterials: targetSite.totalSpentMaterials + (movementData.totalPrice || 0),
-        };
-        await setDoc(doc(db, 'worksites', updatedSite.id), updatedSite);
-      }
+        // 3. Calculate new stock balance
+        let newQty = currentQty;
+        if (movementData.type === 'ENTRADA' || movementData.type === 'DEVOLUCAO') {
+          newQty += movementData.quantity;
+        } else if (movementData.type === 'SAIDA' || movementData.type === 'AJUSTE') {
+          newQty -= movementData.quantity;
+        }
+
+        const finalPrice = updatedUnitPrice !== undefined ? updatedUnitPrice : (matData.avgUnitPrice || 0);
+
+        // 4. Read Worksite doc inside transaction if applicable
+        let worksiteSnap = null;
+        if (worksiteRef) {
+          worksiteSnap = await transaction.get(worksiteRef);
+        }
+
+        // 5. Commit atomic writes
+        transaction.set(movementRef, newMovement);
+        transaction.update(materialRef, {
+          quantity: Math.max(0, newQty),
+          avgUnitPrice: finalPrice,
+          lastUpdated: new Date().toISOString().slice(0, 10),
+        });
+
+        if (worksiteRef && worksiteSnap && worksiteSnap.exists()) {
+          const currentSpent = worksiteSnap.data().totalSpentMaterials || 0;
+          transaction.update(worksiteRef, {
+            totalSpentMaterials: currentSpent + (movementData.totalPrice || 0),
+          });
+        }
+      });
+      console.log(`[Firestore] Movimentação ${movId} gravada com sucesso em transação atômica.`);
+    } catch (err) {
+      console.error('[Firestore Error] Erro ao gravar movimentação em transação:', err);
+      throw err;
     }
   };
 
@@ -253,13 +280,25 @@ export default function App() {
       id: matId,
       lastUpdated: new Date().toISOString().slice(0, 10),
     };
-    await setDoc(doc(db, 'materials', matId), materialToSave);
+    try {
+      await setDoc(doc(db, 'materials', matId), materialToSave);
+      console.log(`[Firestore] Insumo ${matId} salvo com sucesso no Firestore.`);
+    } catch (err) {
+      console.error('[Firestore Error] Erro ao salvar insumo no Firestore:', err);
+      throw err;
+    }
   };
 
   // Delete Material from Firestore
   const handleDeleteMaterial = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir este insumo do catálogo?')) {
-      await deleteDoc(doc(db, 'materials', id));
+      try {
+        await deleteDoc(doc(db, 'materials', id));
+        console.log(`[Firestore] Insumo ${id} excluído com sucesso.`);
+      } catch (err) {
+        console.error('[Firestore Error] Erro ao excluir insumo:', err);
+        alert('Erro ao excluir insumo do Firestore.');
+      }
     }
   };
 
@@ -269,65 +308,92 @@ export default function App() {
     setIsEditMovementOpen(true);
   };
 
-  // Save (update) Movement in Firestore
+  // Save (update) Movement in Firestore (Atomic Transaction)
   const handleSaveMovement = async (id: string, updatedData: Partial<StockMovement>) => {
     const oldMovement = movements.find((m) => m.id === id);
-    if (!oldMovement) return;
+    if (!oldMovement) throw new Error('Movimentação original não encontrada.');
 
-    // Adjust material stock in Firestore
-    const targetMat = materials.find((m) => m.id === oldMovement.materialId);
-    if (targetMat) {
-      let restoredQty = targetMat.quantity;
-      if (oldMovement.type === 'ENTRADA' || oldMovement.type === 'DEVOLUCAO') {
-        restoredQty = Math.max(0, restoredQty - oldMovement.quantity);
-      } else if (oldMovement.type === 'SAIDA' || oldMovement.type === 'AJUSTE') {
-        restoredQty += oldMovement.quantity;
-      }
+    const movementRef = doc(db, 'movements', id);
+    const materialRef = doc(db, 'materials', oldMovement.materialId);
 
-      const newType = updatedData.type || oldMovement.type;
-      const newQty = updatedData.quantity !== undefined ? updatedData.quantity : oldMovement.quantity;
+    try {
+      await runTransaction(db, async (transaction) => {
+        const matSnap = await transaction.get(materialRef);
+        if (!matSnap.exists()) {
+          throw new Error('Insumo correspondente não encontrado no Firestore.');
+        }
+        const matData = matSnap.data() as MaterialItem;
+        let restoredQty = matData.quantity || 0;
 
-      if (newType === 'ENTRADA' || newType === 'DEVOLUCAO') {
-        restoredQty += newQty;
-      } else if (newType === 'SAIDA' || newType === 'AJUSTE') {
-        restoredQty = Math.max(0, restoredQty - newQty);
-      }
+        // Revert old movement effect
+        if (oldMovement.type === 'ENTRADA' || oldMovement.type === 'DEVOLUCAO') {
+          restoredQty -= oldMovement.quantity;
+        } else if (oldMovement.type === 'SAIDA' || oldMovement.type === 'AJUSTE') {
+          restoredQty += oldMovement.quantity;
+        }
 
-      const updatedMat: MaterialItem = {
-        ...targetMat,
-        quantity: restoredQty,
-        lastUpdated: new Date().toISOString().slice(0, 10),
-      };
-      await setDoc(doc(db, 'materials', updatedMat.id), updatedMat);
+        const newType = updatedData.type || oldMovement.type;
+        const newQty = updatedData.quantity !== undefined ? updatedData.quantity : oldMovement.quantity;
+
+        // Prevent negative balance
+        if ((newType === 'SAIDA' || newType === 'AJUSTE') && newQty > restoredQty) {
+          throw new Error(
+            `Saldo insuficiente em estoque no Firestore! Saldo restaurado: ${restoredQty}. Tentativa de saída: ${newQty}.`
+          );
+        }
+
+        if (newType === 'ENTRADA' || newType === 'DEVOLUCAO') {
+          restoredQty += newQty;
+        } else if (newType === 'SAIDA' || newType === 'AJUSTE') {
+          restoredQty -= newQty;
+        }
+
+        const updatedMov: StockMovement = { ...oldMovement, ...updatedData };
+
+        transaction.update(materialRef, {
+          quantity: Math.max(0, restoredQty),
+          lastUpdated: new Date().toISOString().slice(0, 10),
+        });
+        transaction.set(movementRef, updatedMov);
+      });
+      console.log(`[Firestore] Movimentação ${id} atualizada com sucesso em transação.`);
+    } catch (err) {
+      console.error('[Firestore Error] Erro ao atualizar movimentação:', err);
+      throw err;
     }
-
-    // Update movement record in Firestore
-    const newMovRecord: StockMovement = { ...oldMovement, ...updatedData };
-    await setDoc(doc(db, 'movements', id), newMovRecord);
   };
 
-  // Delete Movement from Firestore
+  // Delete Movement from Firestore (Atomic Transaction)
   const handleDeleteMovement = async (id: string) => {
     const movToDelete = movements.find((m) => m.id === id);
-    if (movToDelete) {
-      const targetMat = materials.find((m) => m.id === movToDelete.materialId);
-      if (targetMat) {
-        let adjustedQty = targetMat.quantity;
-        if (movToDelete.type === 'ENTRADA' || movToDelete.type === 'DEVOLUCAO') {
-          adjustedQty = Math.max(0, adjustedQty - movToDelete.quantity);
-        } else if (movToDelete.type === 'SAIDA' || movToDelete.type === 'AJUSTE') {
-          adjustedQty += movToDelete.quantity;
-        }
-        const updatedMat: MaterialItem = {
-          ...targetMat,
-          quantity: adjustedQty,
-          lastUpdated: new Date().toISOString().slice(0, 10),
-        };
-        await setDoc(doc(db, 'materials', updatedMat.id), updatedMat);
-      }
-    }
+    if (!movToDelete) return;
 
-    await deleteDoc(doc(db, 'movements', id));
+    const movementRef = doc(db, 'movements', id);
+    const materialRef = doc(db, 'materials', movToDelete.materialId);
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const matSnap = await transaction.get(materialRef);
+        if (matSnap.exists()) {
+          const matData = matSnap.data() as MaterialItem;
+          let adjustedQty = matData.quantity || 0;
+          if (movToDelete.type === 'ENTRADA' || movToDelete.type === 'DEVOLUCAO') {
+            adjustedQty = Math.max(0, adjustedQty - movToDelete.quantity);
+          } else if (movToDelete.type === 'SAIDA' || movToDelete.type === 'AJUSTE') {
+            adjustedQty += movToDelete.quantity;
+          }
+          transaction.update(materialRef, {
+            quantity: adjustedQty,
+            lastUpdated: new Date().toISOString().slice(0, 10),
+          });
+        }
+        transaction.delete(movementRef);
+      });
+      console.log(`[Firestore] Movimentação ${id} excluída com sucesso.`);
+    } catch (err) {
+      console.error('[Firestore Error] Erro ao excluir movimentação:', err);
+      throw err;
+    }
   };
 
   // Save (Create or Edit) Worksite in Firestore

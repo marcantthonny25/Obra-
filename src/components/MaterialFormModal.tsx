@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Package } from 'lucide-react';
+import { X, Save, Package, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { MaterialCategory, MaterialItem } from '../types';
 
 interface MaterialFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   materialToEdit?: MaterialItem | null;
-  onSaveMaterial: (material: Omit<MaterialItem, 'id' | 'lastUpdated'>, id?: string) => void;
+  onSaveMaterial: (material: Omit<MaterialItem, 'id' | 'lastUpdated'>, id?: string) => Promise<void> | void;
 }
 
 const CATEGORIES: MaterialCategory[] = [
@@ -60,7 +60,15 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
   const [batchNumber, setBatchNumber] = useState('');
   const [notes, setNotes] = useState('');
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
   useEffect(() => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    setIsSaving(false);
+
     if (materialToEdit) {
       setCode(materialToEdit.code);
       setName(materialToEdit.name);
@@ -98,35 +106,54 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    setErrorMsg('');
+    setSuccessMsg('');
 
-    const parsedOptions = detailsOptionsInput
-      ? detailsOptionsInput.split(',').map((o) => o.trim()).filter((o) => o.length > 0)
-      : undefined;
+    if (!name.trim()) {
+      setErrorMsg('Informe o nome / descrição do insumo.');
+      return;
+    }
 
-    onSaveMaterial(
-      {
-        code: code.trim() || 'INS-000',
-        name: name.trim(),
-        category,
-        quantity: parseFloat(quantity) || 0,
-        minQuantity: parseFloat(minQuantity) || 0,
-        unit: unit.trim(),
-        avgUnitPrice: parseFloat(avgUnitPrice) || 0,
-        location: location.trim() || 'Almoxarifado',
-        supplier: supplier.trim() || 'Não especificado',
-        details: details.trim() ? details.trim() : (parsedOptions && parsedOptions[0] ? parsedOptions[0] : undefined),
-        detailsOptions: parsedOptions && parsedOptions.length > 0 ? parsedOptions : undefined,
-        expiryDate: expiryDate ? expiryDate : undefined,
-        batchNumber: batchNumber ? batchNumber : undefined,
-        notes: notes.trim() ? notes.trim() : undefined,
-      },
-      materialToEdit?.id
-    );
+    setIsSaving(true);
 
-    onClose();
+    try {
+      const parsedOptions = detailsOptionsInput
+        ? detailsOptionsInput.split(',').map((o) => o.trim()).filter((o) => o.length > 0)
+        : undefined;
+
+      await onSaveMaterial(
+        {
+          code: code.trim() || 'INS-000',
+          name: name.trim(),
+          category,
+          quantity: parseFloat(quantity) || 0,
+          minQuantity: parseFloat(minQuantity) || 0,
+          unit: unit.trim(),
+          avgUnitPrice: parseFloat(avgUnitPrice) || 0,
+          location: location.trim() || 'Almoxarifado',
+          supplier: supplier.trim() || 'Não especificado',
+          details: details.trim() ? details.trim() : (parsedOptions && parsedOptions[0] ? parsedOptions[0] : undefined),
+          detailsOptions: parsedOptions && parsedOptions.length > 0 ? parsedOptions : undefined,
+          expiryDate: expiryDate ? expiryDate : undefined,
+          batchNumber: batchNumber ? batchNumber : undefined,
+          notes: notes.trim() ? notes.trim() : undefined,
+        },
+        materialToEdit?.id
+      );
+
+      // Display success message ONLY AFTER Firestore confirms writing
+      setSuccessMsg(materialToEdit ? 'Insumo atualizado com sucesso no Firestore!' : 'Insumo cadastrado com sucesso no Firestore!');
+      setTimeout(() => {
+        setIsSaving(false);
+        onClose();
+      }, 800);
+    } catch (err: any) {
+      console.error('[MaterialFormModal Error] Erro ao gravar no Firestore:', err);
+      setErrorMsg(err?.message || 'Erro ao gravar o insumo no banco de dados Firestore.');
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -154,6 +181,19 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-[#E0E0E0] text-xs sm:text-sm">
+          {errorMsg && (
+            <div className="p-3 bg-red-950/60 border border-red-500/40 text-red-300 rounded-xl flex items-center gap-2 text-xs">
+              <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 rounded-xl flex items-center gap-2 text-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{successMsg}</span>
+            </div>
+          )}
           {/* Row 1: Code, Category & Name */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
@@ -350,16 +390,27 @@ export const MaterialFormModal: React.FC<MaterialFormModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-[#1F1F21] bg-[#151517] rounded-lg text-[#E0E0E0] hover:text-white hover:bg-[#1F1F21] font-medium text-xs transition-colors cursor-pointer"
+              disabled={isSaving}
+              className="px-4 py-2 border border-[#1F1F21] bg-[#151517] rounded-lg text-[#E0E0E0] hover:text-white hover:bg-[#1F1F21] font-medium text-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-[#F2A30F] hover:bg-amber-400 text-black font-bold rounded-lg text-xs shadow-md active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+              disabled={isSaving}
+              className="px-5 py-2 bg-[#F2A30F] hover:bg-amber-400 disabled:bg-amber-600/50 text-black font-bold rounded-lg text-xs shadow-md active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
             >
-              <Save className="w-4 h-4" />
-              Salvar Insumo
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Gravando no Firestore...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Salvar Insumo</span>
+                </>
+              )}
             </button>
           </div>
         </form>

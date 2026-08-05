@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Trash2, Calendar, User, FileText, Building } from 'lucide-react';
+import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Trash2, Calendar, User, FileText, Building, CheckCircle2, Loader2 } from 'lucide-react';
 import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite } from '../types';
 
 interface EditMovementModalProps {
@@ -8,8 +8,8 @@ interface EditMovementModalProps {
   movement: StockMovement | null;
   materials: MaterialItem[];
   worksites: WorkSite[];
-  onSaveMovement: (id: string, updatedData: Partial<StockMovement>) => void;
-  onDeleteMovement: (id: string) => void;
+  onSaveMovement: (id: string, updatedData: Partial<StockMovement>) => Promise<void> | void;
+  onDeleteMovement: (id: string) => Promise<void> | void;
 }
 
 const WORK_PHASES: WorkPhase[] = [
@@ -43,8 +43,14 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
   const [notes, setNotes] = useState<string>('');
   const [itemDetail, setItemDetail] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [successMsg, setSuccessMsg] = useState<string>('');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    setIsSaving(false);
+
     if (movement) {
       setType(movement.type);
       setQuantity(String(movement.quantity));
@@ -56,16 +62,16 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
       setNotes(movement.notes || '');
       setItemDetail(movement.itemDetail || '');
     }
-    setErrorMsg('');
   }, [movement, isOpen]);
 
   if (!isOpen || !movement) return null;
 
   const currentMaterial = materials.find((m) => m.id === movement.materialId);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setSuccessMsg('');
 
     const qty = parseFloat(quantity);
     if (isNaN(qty) || qty <= 0) {
@@ -81,27 +87,52 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
     const price = unitPrice ? parseFloat(unitPrice) : (movement.unitPrice || currentMaterial?.avgUnitPrice || 0);
     const selectedWorksite = worksites.find((w) => w.id === workSiteId);
 
-    onSaveMovement(movement.id, {
-      type,
-      itemDetail: itemDetail.trim() ? itemDetail.trim() : undefined,
-      quantity: qty,
-      unitPrice: price,
-      totalPrice: price * qty,
-      workSiteId: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.id : undefined,
-      workSiteName: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.name : undefined,
-      workPhase: (type === 'SAIDA' || type === 'DEVOLUCAO') ? workPhase : undefined,
-      invoiceNumber: type === 'ENTRADA' ? invoiceNumber : undefined,
-      responsible: responsible.trim(),
-      notes: notes.trim(),
-    });
+    setIsSaving(true);
 
-    onClose();
+    try {
+      await onSaveMovement(movement.id, {
+        type,
+        itemDetail: itemDetail.trim() ? itemDetail.trim() : undefined,
+        quantity: qty,
+        unitPrice: price,
+        totalPrice: price * qty,
+        workSiteId: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.id : undefined,
+        workSiteName: (type === 'SAIDA' || type === 'DEVOLUCAO') ? selectedWorksite?.name : undefined,
+        workPhase: (type === 'SAIDA' || type === 'DEVOLUCAO') ? workPhase : undefined,
+        invoiceNumber: type === 'ENTRADA' ? invoiceNumber : undefined,
+        responsible: responsible.trim(),
+        notes: notes.trim(),
+      });
+
+      setSuccessMsg('Movimentação atualizada com sucesso no Firestore!');
+      setTimeout(() => {
+        setIsSaving(false);
+        onClose();
+      }, 800);
+    } catch (err: any) {
+      console.error('[EditMovementModal Error] Erro ao atualizar no Firestore:', err);
+      setErrorMsg(err?.message || 'Erro ao atualizar a movimentação no Firestore.');
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm(`Tem certeza que deseja excluir este registro de movimentação (${movement.type} - ${movement.materialName})?`)) {
-      onDeleteMovement(movement.id);
-      onClose();
+      setErrorMsg('');
+      setSuccessMsg('');
+      setIsSaving(true);
+      try {
+        await onDeleteMovement(movement.id);
+        setSuccessMsg('Movimentação excluída com sucesso!');
+        setTimeout(() => {
+          setIsSaving(false);
+          onClose();
+        }, 800);
+      } catch (err: any) {
+        console.error('[EditMovementModal Error] Erro ao excluir no Firestore:', err);
+        setErrorMsg(err?.message || 'Erro ao excluir a movimentação no Firestore.');
+        setIsSaving(false);
+      }
     }
   };
 
@@ -133,6 +164,13 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
             <div className="p-3 bg-red-950/50 border border-red-500/40 text-red-300 rounded-xl flex items-center gap-2 text-xs">
               <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 rounded-xl flex items-center gap-2 text-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{successMsg}</span>
             </div>
           )}
 
@@ -344,7 +382,8 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
             <button
               type="button"
               onClick={handleDelete}
-              className="px-3 py-2 bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-400 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              disabled={isSaving}
+              className="px-3 py-2 bg-red-950/40 hover:bg-red-900/60 disabled:opacity-50 border border-red-500/40 text-red-400 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               <Trash2 className="w-4 h-4" />
               <span>Excluir Registro</span>
@@ -354,15 +393,24 @@ export const EditMovementModal: React.FC<EditMovementModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-[#1F1F21] bg-[#151517] hover:bg-[#1F1F21] text-xs font-semibold rounded-xl text-[#AAAAAA] hover:text-white transition-colors cursor-pointer"
+                disabled={isSaving}
+                className="px-4 py-2 border border-[#1F1F21] bg-[#151517] hover:bg-[#1F1F21] text-xs font-semibold rounded-xl text-[#AAAAAA] hover:text-white transition-colors cursor-pointer disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-[#F2A30F] hover:bg-amber-400 text-black font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                disabled={isSaving}
+                className="px-5 py-2 bg-[#F2A30F] hover:bg-amber-400 disabled:bg-amber-600/50 text-black font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
               >
-                Salvar Lançamento
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processando no Firestore...</span>
+                  </>
+                ) : (
+                  <span>Salvar Lançamento</span>
+                )}
               </button>
             </div>
           </div>
