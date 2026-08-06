@@ -27,7 +27,7 @@ import {
   LogOut,
   ChevronDown,
 } from 'lucide-react';
-import type { User, MaterialItem, StockMovement, WorkSite } from '../types';
+import { User, MaterialItem, StockMovement, WorkSite, filterMaterialsByWorksite, filterMovementsByWorksite } from '../types';
 import { UserProfileModal } from './UserProfileModal';
 import { UserSettingsModal } from './UserSettingsModal';
 
@@ -39,6 +39,7 @@ interface HomePageProps {
   materials?: MaterialItem[];
   movements?: StockMovement[];
   worksites?: WorkSite[];
+  selectedWorksiteId?: string;
   onOpenQuickMovement?: () => void;
 }
 
@@ -50,12 +51,25 @@ export const HomePage: React.FC<HomePageProps> = ({
   materials = [],
   movements = [],
   worksites = [],
+  selectedWorksiteId = 'ALL',
   onOpenQuickMovement,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Filter materials and movements based on selectedWorksiteId
+  const effectiveWorksiteId = selectedWorksiteId || 'ALL';
+  const filteredMaterials = filterMaterialsByWorksite(materials, effectiveWorksiteId, worksites, movements);
+  const filteredMovements = filterMovementsByWorksite(movements, effectiveWorksiteId, worksites);
+
+  // Temporary log for debugging worksite filtering
+  useEffect(() => {
+    console.log(
+      `[Log HomePage/Estoque] role: ${currentUser?.role || 'Visitante'}, selectedWorksiteId: ${effectiveWorksiteId}, filteredMaterials: ${filteredMaterials.length}, filteredMovements: ${filteredMovements.length}`
+    );
+  }, [currentUser?.role, effectiveWorksiteId, filteredMaterials.length, filteredMovements.length]);
 
   // Theme state
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -83,13 +97,13 @@ export const HomePage: React.FC<HomePageProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Compute key indicators safely
-  const totalMaterials = materials.length;
-  const criticalStockCount = materials.filter((m) => m.quantity <= m.minQuantity).length;
+  // Compute key indicators safely from filtered data
+  const totalMaterials = filteredMaterials.length;
+  const criticalStockCount = filteredMaterials.filter((m) => m.quantity <= m.minQuantity).length;
   const activeWorksitesCount = worksites.filter((w) => w.status === 'Em Andamento' || !w.status).length;
-  const totalMovementsCount = movements.length;
+  const totalMovementsCount = filteredMovements.length;
 
-  const recentMovements = movements.slice(0, 4);
+  const recentMovements = filteredMovements.slice(0, 4);
 
   return (
     <div className="w-full min-h-[calc(100vh-80px)] bg-[#0B0B0C] text-[#E0E0E0] select-none py-4 sm:py-5 px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6 max-w-[1500px] mx-auto">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart,
   Bar,
@@ -24,13 +24,14 @@ import {
   FileSpreadsheet,
   Database,
 } from 'lucide-react';
-import { MaterialItem, StockMovement, WorkSite, User } from '../types';
+import { MaterialItem, StockMovement, WorkSite, User, filterMaterialsByWorksite, filterMovementsByWorksite } from '../types';
 
 interface AnalyticsViewProps {
   materials: MaterialItem[];
   movements: StockMovement[];
   worksites: WorkSite[];
   currentUser?: User | null;
+  selectedWorksiteId?: string;
   onImportBackupJSON: (data: { materials: MaterialItem[]; movements: StockMovement[]; worksites: WorkSite[] }) => void;
   onSeedDemoData?: () => void;
 }
@@ -42,14 +43,27 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   movements,
   worksites,
   currentUser,
+  selectedWorksiteId = 'ALL',
   onImportBackupJSON,
   onSeedDemoData,
 }) => {
   const [printShoppingList, setPrintShoppingList] = useState(false);
 
+  // Filter materials and movements by selectedWorksiteId
+  const effectiveWorksiteId = selectedWorksiteId || 'ALL';
+  const filteredMaterials = filterMaterialsByWorksite(materials, effectiveWorksiteId, worksites, movements);
+  const filteredMovements = filterMovementsByWorksite(movements, effectiveWorksiteId, worksites);
+
+  // Temporary log for debugging worksite filtering
+  useEffect(() => {
+    console.log(
+      `[Log Relatórios/AnalyticsView] role: ${currentUser?.role || 'Visitante'}, selectedWorksiteId: ${effectiveWorksiteId}, filteredMaterialsCount: ${filteredMaterials.length}, filteredMovementsCount: ${filteredMovements.length}`
+    );
+  }, [currentUser?.role, effectiveWorksiteId, filteredMaterials.length, filteredMovements.length]);
+
   // 1. Data: Stock Value by Category
   const categoryValuesMap: Record<string, number> = {};
-  materials.forEach((m) => {
+  filteredMaterials.forEach((m) => {
     const val = m.quantity * m.avgUnitPrice;
     categoryValuesMap[m.category] = (categoryValuesMap[m.category] || 0) + val;
   });
@@ -61,7 +75,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
   // 2. Data: Consumption by Work Phase
   const phaseMap: Record<string, number> = {};
-  movements
+  filteredMovements
     .filter((m) => m.type === 'SAIDA')
     .forEach((m) => {
       const phase = m.workPhase || 'Geral / Outros';

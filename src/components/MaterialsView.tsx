@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   Filter,
@@ -17,13 +17,16 @@ import {
   ShieldCheck,
   Building2,
 } from 'lucide-react';
-import { MaterialCategory, MaterialItem, WorkSite, isGlobalWorksiteRole, canCreateOrEditCatalog, canCreateOrEditMovements } from '../types';
+import { MaterialCategory, MaterialItem, StockMovement, WorkSite, isGlobalWorksiteRole, canCreateOrEditCatalog, canCreateOrEditMovements, filterMaterialsByWorksite } from '../types';
 import type { User } from '../types';
 
 interface MaterialsViewProps {
   materials: MaterialItem[];
   worksites?: WorkSite[];
+  movements?: StockMovement[];
   currentUser?: User | null;
+  selectedWorksiteId?: string;
+  onSelectWorksite?: (id: string) => void;
   onOpenNewMaterial: () => void;
   onEditMaterial: (material: MaterialItem) => void;
   onDeleteMaterial: (id: string) => void;
@@ -48,7 +51,10 @@ const CATEGORIES: ('Todas' | MaterialCategory)[] = [
 export const MaterialsView: React.FC<MaterialsViewProps> = ({
   materials,
   worksites = [],
+  movements = [],
   currentUser,
+  selectedWorksiteId = 'ALL',
+  onSelectWorksite,
   onOpenNewMaterial,
   onEditMaterial,
   onDeleteMaterial,
@@ -56,14 +62,24 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'Todas' | MaterialCategory>('Todas');
-  const [selectedWorksite, setSelectedWorksite] = useState<string>('ALL');
+  const [selectedWorksite, setSelectedWorksite] = useState<string>(selectedWorksiteId || 'ALL');
   const [filterType, setFilterType] = useState<'all' | 'critical' | 'expiry'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   const isGlobalUser = isGlobalWorksiteRole(currentUser?.role);
 
-  // Filter logic
-  const filteredMaterials = materials.filter((item) => {
+  // Sync with selectedWorksiteId prop from header
+  useEffect(() => {
+    if (selectedWorksiteId) {
+      setSelectedWorksite(selectedWorksiteId);
+    }
+  }, [selectedWorksiteId]);
+
+  // First filter materials by selected worksite
+  const worksiteFilteredMaterials = filterMaterialsByWorksite(materials, selectedWorksite, worksites, movements);
+
+  // Filter logic for search, category, and status
+  const filteredMaterials = worksiteFilteredMaterials.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,10 +88,6 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 
     const matchesCategory = selectedCategory === 'Todas' || item.category === selectedCategory;
 
-    const matchesWorksite =
-      selectedWorksite === 'ALL' ||
-      item.location.toLowerCase().includes(selectedWorksite.toLowerCase());
-
     let matchesFilter = true;
     if (filterType === 'critical') {
       matchesFilter = item.quantity <= item.minQuantity;
@@ -83,8 +95,15 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
       matchesFilter = !!item.expiryDate;
     }
 
-    return matchesSearch && matchesCategory && matchesWorksite && matchesFilter;
+    return matchesSearch && matchesCategory && matchesFilter;
   });
+
+  // Temporary log for debugging worksite filtering
+  useEffect(() => {
+    console.log(
+      `[Log Catálogo/MaterialsView] role: ${currentUser?.role || 'Visitante'}, selectedWorksiteId: ${selectedWorksite}, docsCount: ${filteredMaterials.length}`
+    );
+  }, [currentUser?.role, selectedWorksite, filteredMaterials.length]);
 
   const totalValue = materials.reduce((acc, m) => acc + m.quantity * m.avgUnitPrice, 0);
   const criticalItems = materials.filter((m) => m.quantity <= m.minQuantity);
@@ -240,12 +259,16 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
               <Building2 className="w-4 h-4 text-[#F2A30F] absolute left-3 top-2.5" />
               <select
                 value={selectedWorksite}
-                onChange={(e) => setSelectedWorksite(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedWorksite(val);
+                  if (onSelectWorksite) onSelectWorksite(val);
+                }}
                 className="w-full bg-[#151517] border border-[#1F1F21] text-[#A0A0A0] focus:text-white rounded-xl pl-9 pr-3 py-2 text-xs focus:border-[#F2A30F] outline-none cursor-pointer"
               >
                 <option value="ALL">🏢 Todos os Canteiros (Visão Global)</option>
                 {worksites.map((ws) => (
-                  <option key={ws.id} value={ws.name}>
+                  <option key={ws.id} value={ws.id}>
                     {ws.name} ({ws.code})
                   </option>
                 ))}

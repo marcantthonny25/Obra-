@@ -259,4 +259,64 @@ export interface User {
   worksitesAllowed?: string[];
 }
 
+export const filterMovementsByWorksite = (
+  movements: StockMovement[] = [],
+  selectedWorksiteId: string,
+  worksites: WorkSite[] = []
+): StockMovement[] => {
+  if (!selectedWorksiteId || selectedWorksiteId === 'ALL') {
+    return movements;
+  }
+  const targetWorksite = worksites.find(
+    (w) => w.id === selectedWorksiteId || w.name === selectedWorksiteId
+  );
+  const targetId = targetWorksite ? targetWorksite.id : selectedWorksiteId;
+  const targetName = (targetWorksite ? targetWorksite.name : selectedWorksiteId)
+    .toLowerCase()
+    .trim();
+
+  return movements.filter((m) => {
+    if (m.workSiteId && m.workSiteId === targetId) return true;
+    if (m.workSiteName && m.workSiteName.toLowerCase().trim() === targetName) return true;
+    if (m.workSiteName && m.workSiteName.toLowerCase().trim().includes(targetName)) return true;
+    return false;
+  });
+};
+
+export const filterMaterialsByWorksite = (
+  materials: MaterialItem[] = [],
+  selectedWorksiteId: string,
+  worksites: WorkSite[] = [],
+  movements: StockMovement[] = []
+): MaterialItem[] => {
+  if (!selectedWorksiteId || selectedWorksiteId === 'ALL') {
+    return materials;
+  }
+  const targetWorksite = worksites.find(
+    (w) => w.id === selectedWorksiteId || w.name === selectedWorksiteId
+  );
+  const targetId = targetWorksite ? targetWorksite.id : selectedWorksiteId;
+  const targetName = (targetWorksite ? targetWorksite.name : selectedWorksiteId)
+    .toLowerCase()
+    .trim();
+
+  // Movements for this worksite
+  const worksiteMovements = movements.filter((m) => {
+    if (m.workSiteId && m.workSiteId === targetId) return true;
+    if (m.workSiteName && m.workSiteName.toLowerCase().trim() === targetName) return true;
+    if (m.workSiteName && m.workSiteName.toLowerCase().trim().includes(targetName)) return true;
+    return false;
+  });
+  const materialIdsInWorksiteMovements = new Set(worksiteMovements.map((m) => m.materialId));
+
+  return materials.filter((item) => {
+    if (item.workSiteId && item.workSiteId === targetId) return true;
+    if (item.workSiteName && item.workSiteName.toLowerCase().trim() === targetName) return true;
+    if (item.location && item.location.toLowerCase().trim().includes(targetName)) return true;
+    if (materialIdsInWorksiteMovements.has(item.id)) return true;
+
+    return false;
+  });
+};
+
 

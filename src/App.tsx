@@ -309,11 +309,19 @@ export default function App() {
     id?: string
   ) => {
     const matId = id || `mat-${Date.now()}`;
+    const currentSite = worksites.find((w) => w.id === selectedWorksiteId);
+
     const rawMaterial: MaterialItem = {
       ...materialData,
       id: matId,
       lastUpdated: new Date().toISOString().slice(0, 10),
     };
+
+    if (selectedWorksiteId && selectedWorksiteId !== 'ALL') {
+      if (!rawMaterial.workSiteId) rawMaterial.workSiteId = selectedWorksiteId;
+      if (!rawMaterial.workSiteName && currentSite) rawMaterial.workSiteName = currentSite.name;
+    }
+
     const materialToSave = sanitizeForFirestore(rawMaterial);
     assertNoUndefined(materialToSave);
 
@@ -627,6 +635,7 @@ export default function App() {
             materials={materials}
             movements={movements}
             worksites={worksites}
+            selectedWorksiteId={selectedWorksiteId}
             onOpenQuickMovement={handleOpenQuickMovement}
           />
         </main>
@@ -636,7 +645,10 @@ export default function App() {
             <MaterialsView
               materials={materials}
               worksites={worksites}
+              movements={movements}
               currentUser={currentUser}
+              selectedWorksiteId={selectedWorksiteId}
+              onSelectWorksite={(id) => setSelectedWorksiteId(id)}
               onOpenNewMaterial={() => {
                 setMaterialToEdit(null);
                 setIsMaterialFormOpen(true);
@@ -655,6 +667,8 @@ export default function App() {
             movements={movements}
             worksites={worksites}
             currentUser={currentUser}
+            selectedWorksiteId={selectedWorksiteId}
+            onSelectWorksite={(id) => setSelectedWorksiteId(id)}
             onOpenNewMovement={() => handleOpenQuickMovement()}
             onEditMovement={handleOpenEditMovement}
             onDeleteMovement={handleDeleteMovement}
@@ -666,6 +680,7 @@ export default function App() {
             worksites={worksites}
             movements={movements}
             currentUser={currentUser}
+            globalSelectedWorksiteId={selectedWorksiteId}
             onOpenNewWorksite={() => {
               setWorksiteToEdit(null);
               setIsWorksiteFormOpen(true);
@@ -694,6 +709,7 @@ export default function App() {
             movements={movements}
             worksites={worksites}
             currentUser={currentUser}
+            selectedWorksiteId={selectedWorksiteId}
             onImportBackupJSON={handleImportBackupJSON}
             onSeedDemoData={handleSeedDemoData}
           />

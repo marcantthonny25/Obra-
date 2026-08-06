@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -16,13 +16,15 @@ import {
   Trash2,
   ShieldCheck,
 } from 'lucide-react';
-import { MovementType, StockMovement, WorkPhase, WorkSite, isGlobalWorksiteRole, canCreateOrEditMovements, isWorksiteLockedRole } from '../types';
+import { MovementType, StockMovement, WorkPhase, WorkSite, isGlobalWorksiteRole, canCreateOrEditMovements, isWorksiteLockedRole, filterMovementsByWorksite } from '../types';
 import type { User } from '../types';
 
 interface MovementsViewProps {
   movements: StockMovement[];
   worksites: WorkSite[];
   currentUser?: User | null;
+  selectedWorksiteId?: string;
+  onSelectWorksite?: (id: string) => void;
   onOpenNewMovement: () => void;
   onEditMovement: (movement: StockMovement) => void;
   onDeleteMovement: (id: string) => void;
@@ -44,18 +46,30 @@ export const MovementsView: React.FC<MovementsViewProps> = ({
   movements,
   worksites,
   currentUser,
+  selectedWorksiteId = 'ALL',
+  onSelectWorksite,
   onOpenNewMovement,
   onEditMovement,
   onDeleteMovement,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | MovementType>('ALL');
-  const [selectedWorksite, setSelectedWorksite] = useState<string>('ALL');
+  const [selectedWorksite, setSelectedWorksite] = useState<string>(selectedWorksiteId || 'ALL');
   const [selectedPhase, setSelectedPhase] = useState<string>('ALL');
 
   const isGlobalUser = isGlobalWorksiteRole(currentUser?.role);
 
-  const filteredMovements = movements.filter((mov) => {
+  // Sync with selectedWorksiteId prop from header
+  useEffect(() => {
+    if (selectedWorksiteId) {
+      setSelectedWorksite(selectedWorksiteId);
+    }
+  }, [selectedWorksiteId]);
+
+  // First filter movements by worksite
+  const worksiteFilteredMovements = filterMovementsByWorksite(movements, selectedWorksite, worksites);
+
+  const filteredMovements = worksiteFilteredMovements.filter((mov) => {
     const matchesSearch =
       mov.materialName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       mov.responsible.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,11 +77,17 @@ export const MovementsView: React.FC<MovementsViewProps> = ({
       (mov.notes && mov.notes.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesType = typeFilter === 'ALL' || mov.type === typeFilter;
-    const matchesWorksite = selectedWorksite === 'ALL' || mov.workSiteId === selectedWorksite;
     const matchesPhase = selectedPhase === 'ALL' || mov.workPhase === selectedPhase;
 
-    return matchesSearch && matchesType && matchesWorksite && matchesPhase;
+    return matchesSearch && matchesType && matchesPhase;
   });
+
+  // Temporary log for debugging worksite filtering
+  useEffect(() => {
+    console.log(
+      `[Log Movimentações/MovementsView] role: ${currentUser?.role || 'Visitante'}, selectedWorksiteId: ${selectedWorksite}, docsCount: ${filteredMovements.length}`
+    );
+  }, [currentUser?.role, selectedWorksite, filteredMovements.length]);
 
   // Calculate totals
   const totalEntradas = movements
@@ -230,7 +250,11 @@ export const MovementsView: React.FC<MovementsViewProps> = ({
           <div>
             <select
               value={selectedWorksite}
-              onChange={(e) => setSelectedWorksite(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedWorksite(val);
+                if (onSelectWorksite) onSelectWorksite(val);
+              }}
               className="w-full bg-[#151517] border border-[#1F1F21] rounded-xl p-2 text-white focus:border-[#F2A30F] outline-none"
             >
               <option value="ALL">Todas as Obras / Canteiros</option>

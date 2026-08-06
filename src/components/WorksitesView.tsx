@@ -17,6 +17,7 @@ import {
   Info,
   Lock,
 } from 'lucide-react';
+import { useEffect } from 'react';
 import { StockMovement, WorkSite, canManageWorksites, isGlobalWorksiteRole, canCreateOrEditMovements } from '../types';
 import type { User } from '../types';
 
@@ -24,6 +25,7 @@ interface WorksitesViewProps {
   worksites: WorkSite[];
   movements: StockMovement[];
   currentUser?: User | null;
+  globalSelectedWorksiteId?: string;
   onOpenNewWorksite: () => void;
   onEditWorksite: (worksite: WorkSite) => void;
   onDeleteWorksite: (id: string) => void;
@@ -34,6 +36,7 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
   worksites,
   movements,
   currentUser,
+  globalSelectedWorksiteId = 'ALL',
   onOpenNewWorksite,
   onEditWorksite,
   onDeleteWorksite,
@@ -44,12 +47,25 @@ export const WorksitesView: React.FC<WorksitesViewProps> = ({
   const isAdmin = canManageWorksites(currentUser?.role);
   const isGlobalUser = isGlobalWorksiteRole(currentUser?.role);
   const canMove = canCreateOrEditMovements(currentUser?.role);
-  const selectedWorksite = worksites.find((w) => w.id === selectedWorksiteId);
+
+  const displayWorksites = (globalSelectedWorksiteId && globalSelectedWorksiteId !== 'ALL')
+    ? worksites.filter((w) => w.id === globalSelectedWorksiteId)
+    : worksites;
+
+  const activeWorksiteId = selectedWorksiteId || (globalSelectedWorksiteId !== 'ALL' ? globalSelectedWorksiteId : null);
+  const selectedWorksite = worksites.find((w) => w.id === activeWorksiteId);
 
   // Filter movements for selected worksite
-  const siteMovements = selectedWorksiteId
-    ? movements.filter((m) => m.workSiteId === selectedWorksiteId)
+  const siteMovements = activeWorksiteId
+    ? movements.filter((m) => m.workSiteId === activeWorksiteId)
     : [];
+
+  // Temporary log for debugging worksite filtering
+  useEffect(() => {
+    console.log(
+      `[Log Canteiros/WorksitesView] role: ${currentUser?.role || 'Visitante'}, selectedWorksiteId: ${globalSelectedWorksiteId}, docsCount: ${displayWorksites.length}`
+    );
+  }, [currentUser?.role, globalSelectedWorksiteId, displayWorksites.length]);
 
   return (
     <div className="space-y-6">
