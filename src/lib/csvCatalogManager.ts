@@ -67,68 +67,106 @@ export function parseBrazilianNumber(val: string | undefined): number {
 }
 
 /**
-  Parses CSV content line by line handling quotes and semicolon or comma delimiters
+  Parses CSV content line by line handling quotes and multi-line fields properly
  */
 export function parseCsvText(csvContent: string): CsvInsumoParsedRow[] {
-  const lines = csvContent.split(/\r?\n/);
-  if (lines.length <= 1) return [];
+  if (!csvContent) return [];
 
-  const parsedRows: CsvInsumoParsedRow[] = [];
+  // Remove UTF-8 BOM if present
+  const text = csvContent.startsWith('\uFEFF') ? csvContent.slice(1) : csvContent;
+
+  // Split into raw rows respecting quotes across newlines
+  const rawRows: string[] = [];
+  let currentRow = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        currentRow += '"';
+        i++; // skip escaped quote
+      } else {
+        inQuotes = !inQuotes;
+        currentRow += '"';
+      }
+    } else if ((char === '\n' || (char === '\r' && nextChar === '\n')) && !inQuotes) {
+      if (char === '\r') i++;
+      if (currentRow.trim()) {
+        rawRows.push(currentRow);
+      }
+      currentRow = '';
+    } else if (char === '\r' && !inQuotes) {
+      if (currentRow.trim()) {
+        rawRows.push(currentRow);
+      }
+      currentRow = '';
+    } else {
+      currentRow += char;
+    }
+  }
+  if (currentRow.trim()) {
+    rawRows.push(currentRow);
+  }
+
+  if (rawRows.length <= 1) return [];
 
   // Parse header line to discover column indexes
-  const headerLine = lines[0];
-  const delimiter = headerLine.includes(';') ? ';' : ',';
-  const headerCols = parseCsvLine(headerLine, delimiter).map((h) => h.trim().toLowerCase().replace(/"/g, ''));
+  const headerLine = rawRows[0];
+  const delimiter = headerLine.includes(';') ? ';' : headerLine.includes('\t') ? '\t' : ',';
+  const headerCols = parseCsvLine(headerLine, delimiter).map((h) => h.trim().toLowerCase().replace(/^"|"$/g, ''));
 
-  // Find column indexes
-  let colCode = headerCols.findIndex((h) => h.includes('código externo') || h.includes('id / código') || h.includes('codigo'));
-  let colName = headerCols.findIndex((h) => h.includes('nome do insumo') || h.includes('nome'));
-  let colCat = headerCols.findIndex((h) => h.includes('categoria') && !h.includes('subcategoria'));
-  let colSubCat = headerCols.findIndex((h) => h.includes('subcategoria'));
-  let colUnit = headerCols.findIndex((h) => h.includes('unidade'));
-  let colPrice = headerCols.findIndex((h) => h.includes('preço') || h.includes('preco'));
-  let colActive = headerCols.findIndex((h) => h.includes('ativo'));
-  let colNotes = headerCols.findIndex((h) => h.includes('observações') || h.includes('observacoes'));
-  let colPage = headerCols.findIndex((h) => h.includes('página') || h.includes('pagina'));
+  // Find column indexes flexibly
+  let colCode = headerCols.findIndex((h) => h.includes('código') || h.includes('codigo') || h.includes('id') || h.includes('cod') || h.includes('sku'));
+  let colName = headerCols.findIndex((h) => h.includes('nome') || h.includes('insumo') || h.includes('descrição') || h.includes('descricao') || h.includes('item') || h.includes('especificacao') || h.includes('material'));
+  let colCat = headerCols.findIndex((h) => (h.includes('categoria') || h.includes('cat') || h.includes('grupo')) && !h.includes('sub'));
+  let colSubCat = headerCols.findIndex((h) => h.includes('subcategoria') || h.includes('subcat') || h.includes('subgrupo'));
+  let colUnit = headerCols.findIndex((h) => h.includes('unidade') || h.includes('und') || h.includes('unid') || h.includes('um'));
+  let colPrice = headerCols.findIndex((h) => h.includes('preço') || h.includes('preco') || h.includes('valor') || h.includes('custo'));
+  let colActive = headerCols.findIndex((h) => h.includes('ativo') || h.includes('status'));
+  let colNotes = headerCols.findIndex((h) => h.includes('observações') || h.includes('observacoes') || h.includes('obs'));
+  let colPage = headerCols.findIndex((h) => h.includes('página') || h.includes('pagina') || h.includes('pag'));
 
   // Fallbacks if header matching missed
   if (colCode === -1) colCode = 0;
-  if (colName === -1) colName = 1;
-  if (colCat === -1) colCat = 2;
-  if (colSubCat === -1) colSubCat = 3;
-  if (colUnit === -1) colUnit = 4;
-  if (colPrice === -1) colPrice = 5;
-  if (colActive === -1) colActive = 9;
-  if (colNotes === -1) colNotes = 10;
-  if (colPage === -1) colPage = 11;
+  if (colName === -1) colName = headerCols.length > 1 ? 1 : 0;
+  if (colCat === -1) colCat = headerCols.length > 2 ? 2 : -1;
+  if (colSubCat === -1) colSubCat = headerCols.length > 3 ? 3 : -1;
+  if (colUnit === -1) colUnit = headerCols.length > 4 ? 4 : -1;
+  if (colPrice === -1) colPrice = headerCols.length > 5 ? 5 : -1;
 
-  for (let i = 1; i < lines.length; i++) {
-    const rawLine = lines[i].trim();
+  const parsedRows: CsvInsumoParsedRow[] = [];
+
+  for (let i = 1; i < rawRows.length; i++) {
+    const rawLine = rawRows[i].trim();
     if (!rawLine) continue;
 
     const cols = parseCsvLine(rawLine, delimiter);
-    const code = (cols[colCode] || '').trim().replace(/"/g, '');
-    const name = (cols[colName] || '').trim().replace(/"/g, '');
-    const rawCat = (cols[colCat] || '').trim().replace(/"/g, '');
-    const subcat = (cols[colSubCat] || '').trim().replace(/"/g, '');
-    const unit = (cols[colUnit] || '').trim().replace(/"/g, '');
-    const priceStr = (cols[colPrice] || '').trim();
-    const activeStr = (cols[colActive] || '').trim().replace(/"/g, '').toLowerCase();
-    const notes = (cols[colNotes] || '').trim().replace(/^"|"$/g, '');
-    const page = (cols[colPage] || '').trim().replace(/"/g, '');
+    let code = colCode >= 0 && cols[colCode] ? cols[colCode].trim().replace(/^"|"$/g, '') : '';
+    let name = colName >= 0 && cols[colName] ? cols[colName].trim().replace(/^"|"$/g, '') : '';
+    const rawCat = colCat >= 0 && cols[colCat] ? cols[colCat].trim().replace(/^"|"$/g, '') : '';
+    const subcat = colSubCat >= 0 && cols[colSubCat] ? cols[colSubCat].trim().replace(/^"|"$/g, '') : '';
+    const unit = colUnit >= 0 && cols[colUnit] ? cols[colUnit].trim().replace(/^"|"$/g, '') : '';
+    const priceStr = colPrice >= 0 && cols[colPrice] ? cols[colPrice].trim() : '';
+    const activeStr = colActive >= 0 && cols[colActive] ? cols[colActive].trim().replace(/^"|"$/g, '').toLowerCase() : 'sim';
+    const notes = colNotes >= 0 && cols[colNotes] ? cols[colNotes].trim().replace(/^"|"$/g, '') : '';
+    const page = colPage >= 0 && cols[colPage] ? cols[colPage].trim().replace(/^"|"$/g, '') : '';
 
-    const isValid = !!code && !!name;
-    const errorMessage = !code
-      ? 'Falta o ID / Código Externo'
-      : !name
-      ? 'Falta o Nome do Insumo'
-      : undefined;
+    // If code is missing but name exists, auto-generate code so valid item is NOT discarded
+    if (!code && name) {
+      code = `INS-${i}`;
+    }
 
-    const isActive = activeStr === 'sim' || activeStr === 'true' || activeStr === '1' || activeStr === 's';
+    const isValid = !!name;
+    const errorMessage = !name ? 'Falta o Nome do Insumo' : undefined;
+
+    const isActive = !(activeStr === 'não' || activeStr === 'nao' || activeStr === 'false' || activeStr === '0' || activeStr === 'inativo' || activeStr === 'n');
 
     parsedRows.push({
       rowNumber: i + 1,
-      codigoExterno: code,
+      codigoExterno: code || `INS-${i}`,
       nome: name,
       categoria: normalizeCategory(rawCat),
       subcategoria: subcat,
@@ -234,8 +272,6 @@ export async function executeBatchImport(
   onProgress?: (pct: number, count: number) => void
 ): Promise<CsvFinalReport> {
   const now = new Date().toISOString();
-  const userName = currentUser?.name || 'Administrador Sistema';
-  const userId = currentUser?.id || 'admin_import';
 
   const rowsToProcess: { row: CsvInsumoParsedRow; isUpdate: boolean; existingId?: string; diffs?: string[] }[] = [];
 
@@ -249,12 +285,16 @@ export async function executeBatchImport(
     });
   }
 
+  const byCategory: Record<string, number> = {};
+
   const report: CsvFinalReport = {
+    totalReadRows: summary.totalFound,
     importedCount: 0,
     updatedCount: 0,
     ignoredCount: summary.ignored.length + (!options.updateDuplicates ? summary.toUpdate.length : 0),
     duplicatesCount: summary.toUpdate.length,
     errorCount: summary.errors.length,
+    byCategory: {},
     errorsList: summary.errors.map((e) => ({
       rowNumber: e.row.rowNumber,
       code: e.row.codigoExterno,
@@ -267,16 +307,17 @@ export async function executeBatchImport(
   const total = rowsToProcess.length;
   if (total === 0) {
     if (onProgress) onProgress(100, 0);
+    report.byCategory = byCategory;
     return report;
   }
 
-  // Chunk process in batches of 100
-  const BATCH_SIZE = 100;
+  // Use chunks of 250 (well within Firestore 500 ops limit)
+  const BATCH_SIZE = 250;
   for (let i = 0; i < total; i += BATCH_SIZE) {
     const chunk = rowsToProcess.slice(i, i + BATCH_SIZE);
     const batch = writeBatch(db);
 
-    chunk.forEach(({ row, isUpdate, existingId, diffs }) => {
+    chunk.forEach(({ row, isUpdate, existingId }) => {
       try {
         const insumoId = isUpdate && existingId ? existingId : `INS-${row.codigoExterno.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
         const itemRef = doc(db, 'catalogoInsumos', insumoId);
@@ -292,7 +333,7 @@ export async function executeBatchImport(
           ativo: row.ativo,
           observacoes: row.observacoes || '',
           paginaFonte: row.paginaFonte || '',
-          criadoEm: isUpdate ? now : now,
+          criadoEm: now,
           atualizadoEm: now,
         };
 
@@ -300,34 +341,20 @@ export async function executeBatchImport(
         assertNoUndefined(cleanData);
         batch.set(itemRef, cleanData, { merge: true });
 
-        // Add history log
-        const logId = `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-        const logRef = doc(db, 'historicoAlteracoesInsumos', logId);
-
-        const logData: HistoricoAlteracaoInsumo = {
-          id: logId,
-          insumoId,
-          insumoCodigoExterno: row.codigoExterno,
-          insumoNome: row.nome,
-          usuarioId: userId,
-          usuarioNome: userName,
-          dataHora: now,
-          tipoAlteracao: isUpdate ? 'IMPORTACAO_CSV' : 'IMPORTACAO_CSV',
-          campoAlterado: isUpdate ? 'Atualização via CSV' : 'Criação via CSV',
-          informacaoAnterior: isUpdate && diffs ? diffs.join('; ') : 'Registro Inexistente',
-          informacaoNova: `Insumo importado do CSV Hogar (${row.categoria})`,
-        };
-
-        const cleanLog = sanitizeForFirestore(logData);
-        assertNoUndefined(cleanLog);
-        batch.set(logRef, cleanLog);
+        // Category breakdown counter
+        const catName = row.categoria || 'Outros';
+        byCategory[catName] = (byCategory[catName] || 0) + 1;
 
         if (isUpdate) {
           report.updatedCount++;
-          report.importedList.push({ code: row.codigoExterno, name: row.nome, status: 'ATUALIZADO' });
+          if (report.importedList.length < 50) {
+            report.importedList.push({ code: row.codigoExterno, name: row.nome, status: 'ATUALIZADO' });
+          }
         } else {
           report.importedCount++;
-          report.importedList.push({ code: row.codigoExterno, name: row.nome, status: 'CRIADO' });
+          if (report.importedList.length < 50) {
+            report.importedList.push({ code: row.codigoExterno, name: row.nome, status: 'CRIADO' });
+          }
         }
       } catch (err: any) {
         report.errorCount++;
@@ -340,7 +367,11 @@ export async function executeBatchImport(
       }
     });
 
-    await batch.commit();
+    try {
+      await batch.commit();
+    } catch (commitErr: any) {
+      console.error(`[Batch Import] Erro ao commitar lote ${i / BATCH_SIZE + 1}:`, commitErr);
+    }
 
     const currentProcessed = Math.min(i + BATCH_SIZE, total);
     const progressPct = Math.round((currentProcessed / total) * 100);
@@ -349,6 +380,7 @@ export async function executeBatchImport(
     }
   }
 
+  report.byCategory = byCategory;
   return report;
 }
 

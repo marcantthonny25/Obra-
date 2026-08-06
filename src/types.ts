@@ -412,11 +412,13 @@ export interface CsvPreviewSummary {
 }
 
 export interface CsvFinalReport {
+  totalReadRows: number;
   importedCount: number;
   updatedCount: number;
   ignoredCount: number;
   duplicatesCount: number;
   errorCount: number;
+  byCategory: Record<string, number>;
   errorsList: { rowNumber: number; code: string; name: string; reason: string }[];
   importedList: { code: string; name: string; status: 'CRIADO' | 'ATUALIZADO' }[];
 }

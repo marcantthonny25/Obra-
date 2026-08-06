@@ -11,6 +11,7 @@ import {
   ShieldAlert,
   FileText,
   Download,
+  Tag,
 } from 'lucide-react';
 import {
   CatalogoInsumo,
@@ -459,13 +460,18 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
                     <div>
                       <h4 className="text-sm font-bold text-white">Importação Concluída com Sucesso!</h4>
                       <p className="text-xs text-emerald-300/80">
-                        O Catálogo Global de Insumos da Hogar foi atualizado e está sincronizado para todos os canteiros.
+                        O Catálogo Global de Insumos da Hogar foi atualizado e está gravado na coleção <code className="bg-black/40 px-1.5 py-0.5 rounded text-amber-300 font-mono">catalogoInsumos</code> do Firestore.
                       </p>
                     </div>
                   </div>
 
                   {/* Metrics Summary */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div className="bg-[#151518] border border-blue-500/30 p-3.5 rounded-2xl text-center">
+                      <span className="text-[10px] font-bold text-blue-400 uppercase block">Linhas Lidas</span>
+                      <span className="text-2xl font-black text-blue-400">{finalReport.totalReadRows || parsedRows.length}</span>
+                    </div>
+
                     <div className="bg-[#151518] border border-emerald-500/30 p-3.5 rounded-2xl text-center">
                       <span className="text-[10px] font-bold text-emerald-400 uppercase block">Criados</span>
                       <span className="text-2xl font-black text-emerald-400">{finalReport.importedCount}</span>
@@ -477,7 +483,7 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
                     </div>
 
                     <div className="bg-[#151518] border border-[#222226] p-3.5 rounded-2xl text-center">
-                      <span className="text-[10px] font-bold text-[#888888] uppercase block">Ignorados / Sem Alteração</span>
+                      <span className="text-[10px] font-bold text-[#888888] uppercase block">Ignorados</span>
                       <span className="text-2xl font-black text-[#A0A0A0]">{finalReport.ignoredCount}</span>
                     </div>
 
@@ -486,6 +492,28 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
                       <span className="text-2xl font-black text-red-400">{finalReport.errorCount}</span>
                     </div>
                   </div>
+
+                  {/* Breakdown by Category */}
+                  {finalReport.byCategory && Object.keys(finalReport.byCategory).length > 0 && (
+                    <div className="space-y-3 bg-[#121215] border border-[#222226] p-4 rounded-2xl">
+                      <h5 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-amber-400" /> Total de Insumos Importados por Categoria
+                      </h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                        {Object.entries(finalReport.byCategory).map(([catName, count]) => (
+                          <div
+                            key={catName}
+                            className="bg-[#18181C] border border-[#26262B] px-3 py-2 rounded-xl flex items-center justify-between text-xs"
+                          >
+                            <span className="text-white font-medium truncate pr-2">{catName}</span>
+                            <span className="bg-amber-500/15 text-amber-300 font-bold px-2 py-0.5 rounded-lg border border-amber-500/30 text-xs shrink-0">
+                              {count}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Errors Detail if any */}
                   {finalReport.errorsList.length > 0 && (
