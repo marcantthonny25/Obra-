@@ -319,4 +319,107 @@ export const filterMaterialsByWorksite = (
   });
 };
 
+// ------------------------------------------------------------------
+// GLOBAL CATALOG & WORKSITE STOCK DATA MODELS
+// ------------------------------------------------------------------
+
+export interface DetalhesAdicionaisInsumo {
+  fabricante?: string;
+  marca?: string;
+  modelo?: string;
+  especificacaoTecnica?: string;
+  codigoBarras?: string;
+  normaTecnica?: string;
+  dimensoes?: string;
+  material?: string;
+  arquivoFichaTecnica?: string;
+  [key: string]: any;
+}
+
+export interface CatalogoInsumo {
+  id: string;
+  codigoExterno: string; // e.g., "SIENGE-908"
+  nome: string;
+  categoria: MaterialCategory;
+  subcategoria: string;
+  unidade: string;
+  precoUnitario: number;
+  ativo: boolean;
+  observacoes: string;
+  paginaFonte?: string;
+  detalhesAdicionais?: DetalhesAdicionaisInsumo;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
+export interface EstoqueCanteiro {
+  id: string; // Key e.g., `${canteiroId}_${insumoId}`
+  canteiroId: string;
+  insumoId: string;
+  estoqueAtual: number;
+  estoqueMinimo: number;
+  localArmazenamento: string;
+  observacoesDoCanteiro?: string;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
+export type TipoAlteracaoHistorico =
+  | 'IMPORTACAO_CSV'
+  | 'CRIACAO'
+  | 'EDICAO_GLOBAL'
+  | 'INATIVACAO'
+  | 'REATIVACAO'
+  | 'CONFIG_ESTOQUE_CANTEIRO'
+  | 'EDICAO_ESTOQUE_CANTEIRO';
+
+export interface HistoricoAlteracaoInsumo {
+  id: string;
+  insumoId: string;
+  insumoCodigoExterno: string;
+  insumoNome?: string;
+  usuarioId?: string;
+  usuarioNome: string;
+  dataHora: string;
+  tipoAlteracao: TipoAlteracaoHistorico;
+  campoAlterado: string;
+  informacaoAnterior?: string;
+  informacaoNova: string;
+}
+
+export interface CsvInsumoParsedRow {
+  rowNumber: number;
+  codigoExterno: string;
+  nome: string;
+  categoria: MaterialCategory;
+  subcategoria: string;
+  unidade: string;
+  precoUnitario: number;
+  ativo: boolean;
+  observacoes: string;
+  paginaFonte: string;
+  rawLine: string;
+  isValid: boolean;
+  errorMessage?: string;
+}
+
+export interface CsvPreviewSummary {
+  totalFound: number;
+  toCreate: CsvInsumoParsedRow[];
+  toUpdate: { row: CsvInsumoParsedRow; existingItem: CatalogoInsumo; diffs: string[] }[];
+  ignored: CsvInsumoParsedRow[];
+  errors: { row: CsvInsumoParsedRow; reason: string }[];
+}
+
+export interface CsvFinalReport {
+  importedCount: number;
+  updatedCount: number;
+  ignoredCount: number;
+  duplicatesCount: number;
+  errorCount: number;
+  errorsList: { rowNumber: number; code: string; name: string; reason: string }[];
+  importedList: { code: string; name: string; status: 'CRIADO' | 'ATUALIZADO' }[];
+}
+
+
 

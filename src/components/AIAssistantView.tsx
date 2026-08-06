@@ -55,6 +55,29 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setTimeout(() => setNotificationMsg(null), 4000);
   };
 
+  // Safe fetch helper for AI endpoints
+  const callAiEndpoint = async (url: string, payload: any) => {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const text = await res.text();
+    if (!text || !text.trim()) {
+      throw new Error(`O servidor retornou uma resposta vazia (Status HTTP ${res.status}).`);
+    }
+
+    let json: any;
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      throw new Error(`Resposta do servidor não está em formato JSON (${res.status}): ${text.slice(0, 120)}`);
+    }
+
+    return json;
+  };
+
   // 1. Handle Estimator Call
   const handleRunEstimator = async () => {
     if (!dimensions.trim()) return;
@@ -62,19 +85,14 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setEstimateResult(null);
 
     try {
-      const res = await fetch('/api/ai/estimate-mix', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskType, dimensions, specs, notes }),
-      });
-      const json = await res.json();
+      const json = await callAiEndpoint('/api/ai/estimate-mix', { taskType, dimensions, specs, notes });
       if (json.success) {
         setEstimateResult(json.data);
       } else {
         alert(`Erro na estimativa: ${json.error}`);
       }
     } catch (err: any) {
-      alert(`Falha ao conectar com o servidor: ${err.message}`);
+      alert(`Falha no Assistente IA: ${err.message}`);
     } finally {
       setEstimating(false);
     }
@@ -101,19 +119,14 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setInvoiceResult(null);
 
     try {
-      const res = await fetch('/api/ai/parse-invoice', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rawText: invoiceText, imageBase64: invoiceImage }),
-      });
-      const json = await res.json();
+      const json = await callAiEndpoint('/api/ai/parse-invoice', { rawText: invoiceText, imageBase64: invoiceImage });
       if (json.success) {
         setInvoiceResult(json.data);
       } else {
         alert(`Erro na leitura do comprovante: ${json.error}`);
       }
     } catch (err: any) {
-      alert(`Falha ao conectar com o servidor: ${err.message}`);
+      alert(`Falha no Assistente IA: ${err.message}`);
     } finally {
       setParsingInvoice(false);
     }
@@ -125,19 +138,14 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setAuditResult(null);
 
     try {
-      const res = await fetch('/api/ai/analyze-stock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: materials, activeWorks: worksites }),
-      });
-      const json = await res.json();
+      const json = await callAiEndpoint('/api/ai/analyze-stock', { items: materials, activeWorks: worksites });
       if (json.success) {
         setAuditResult(json.data);
       } else {
         alert(`Erro na análise: ${json.error}`);
       }
     } catch (err: any) {
-      alert(`Falha ao conectar com o servidor: ${err.message}`);
+      alert(`Falha no Assistente IA: ${err.message}`);
     } finally {
       setAnalyzingStock(false);
     }

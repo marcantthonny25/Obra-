@@ -91,6 +91,59 @@
         "notes": { "type": "string" }
       },
       "required": ["id", "code", "workSiteId", "requesterName"]
+    },
+    "catalogoInsumos": {
+      "title": "Catálogo Global de Insumos",
+      "description": "Global catalog of construction inputs shared across all worksites",
+      "properties": {
+        "id": { "type": "string" },
+        "codigoExterno": { "type": "string" },
+        "nome": { "type": "string" },
+        "categoria": { "type": "string" },
+        "subcategoria": { "type": "string" },
+        "unidade": { "type": "string" },
+        "precoUnitario": { "type": "number" },
+        "ativo": { "type": "boolean" },
+        "observacoes": { "type": "string" },
+        "paginaFonte": { "type": "string" },
+        "criadoEm": { "type": "string" },
+        "atualizadoEm": { "type": "string" }
+      },
+      "required": ["id", "codigoExterno", "nome"]
+    },
+    "estoquesPorCanteiro": {
+      "title": "Estoques por Canteiro",
+      "description": "Worksite specific stock quantity, min stock and location",
+      "properties": {
+        "id": { "type": "string" },
+        "canteiroId": { "type": "string" },
+        "insumoId": { "type": "string" },
+        "estoqueAtual": { "type": "number" },
+        "estoqueMinimo": { "type": "number" },
+        "localArmazenamento": { "type": "string" },
+        "observacoesDoCanteiro": { "type": "string" },
+        "criadoEm": { "type": "string" },
+        "atualizadoEm": { "type": "string" }
+      },
+      "required": ["id", "canteiroId", "insumoId"]
+    },
+    "historicoAlteracoesInsumos": {
+      "title": "Histórico de Alterações de Insumos",
+      "description": "Audit trail log for catalog updates, imports and inactivations",
+      "properties": {
+        "id": { "type": "string" },
+        "insumoId": { "type": "string" },
+        "insumoCodigoExterno": { "type": "string" },
+        "insumoNome": { "type": "string" },
+        "usuarioId": { "type": "string" },
+        "usuarioNome": { "type": "string" },
+        "dataHora": { "type": "string" },
+        "tipoAlteracao": { "type": "string" },
+        "campoAlterado": { "type": "string" },
+        "informacaoAnterior": { "type": "string" },
+        "informacaoNova": { "type": "string" }
+      },
+      "required": ["id", "insumoId", "usuarioNome", "dataHora"]
     }
   }
 }

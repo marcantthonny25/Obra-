@@ -95,6 +95,24 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if true;
     }
+
+    // Global Catalog of Inputs Collection
+    match /catalogoInsumos/{insumoId} {
+      allow read: if true;
+      allow create, update, delete: if true;
+    }
+
+    // Worksite Stock Collection
+    match /estoquesPorCanteiro/{estoqueId} {
+      allow read: if true;
+      allow create, update, delete: if true;
+    }
+
+    // Audit History Log Collection
+    match /historicoAlteracoesInsumos/{logId} {
+      allow read: if true;
+      allow create, update, delete: if true;
+    }
   }
 }
 

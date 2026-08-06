@@ -16,8 +16,10 @@ import {
   Boxes,
   ShieldCheck,
   Building2,
+  FileSpreadsheet,
+  History,
 } from 'lucide-react';
-import { MaterialCategory, MaterialItem, StockMovement, WorkSite, isGlobalWorksiteRole, canCreateOrEditCatalog, canCreateOrEditMovements, filterMaterialsByWorksite } from '../types';
+import { MaterialCategory, MaterialItem, StockMovement, WorkSite, CatalogoInsumo, isGlobalWorksiteRole, canCreateOrEditCatalog, canCreateOrEditMovements, filterMaterialsByWorksite } from '../types';
 import type { User } from '../types';
 
 interface MaterialsViewProps {
@@ -31,6 +33,8 @@ interface MaterialsViewProps {
   onEditMaterial: (material: MaterialItem) => void;
   onDeleteMaterial: (id: string) => void;
   onOpenQuickMovement: (materialId: string) => void;
+  onOpenImportCsv?: () => void;
+  onOpenHistoryInsumo?: (insumo: MaterialItem) => void;
 }
 
 const CATEGORIES: ('Todas' | MaterialCategory)[] = [
@@ -59,6 +63,8 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
   onEditMaterial,
   onDeleteMaterial,
   onOpenQuickMovement,
+  onOpenImportCsv,
+  onOpenHistoryInsumo,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'Todas' | MaterialCategory>('Todas');
@@ -161,13 +167,25 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
           </div>
 
           {canCreateOrEditCatalog(currentUser?.role) ? (
-            <button
-              onClick={onOpenNewMaterial}
-              className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-md active:scale-95 transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              Novo Insumo
-            </button>
+            <div className="flex items-center gap-2">
+              {onOpenImportCsv && (
+                <button
+                  onClick={onOpenImportCsv}
+                  className="bg-[#1C1C20] hover:bg-[#25252A] text-amber-400 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 border border-amber-500/30 shadow-md active:scale-95 transition-all cursor-pointer"
+                  title="Importar Catálogo Global via CSV"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-amber-400" />
+                  Importar CSV
+                </button>
+              )}
+              <button
+                onClick={onOpenNewMaterial}
+                className="bg-[#F2A30F] hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-md active:scale-95 transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                Novo Insumo
+              </button>
+            </div>
           ) : (
             <span className="bg-[#151517] border border-[#222226] text-[#888888] px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
@@ -474,6 +492,15 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 
                   {canCreateOrEditCatalog(currentUser?.role) && (
                     <div className="flex items-center gap-1">
+                      {onOpenHistoryInsumo && (
+                        <button
+                          onClick={() => onOpenHistoryInsumo(item)}
+                          className="p-1.5 text-[#888888] hover:text-amber-400 hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"
+                          title="Ver Histórico de Alterações"
+                        >
+                          <History className="w-4 h-4 text-amber-400" />
+                        </button>
+                      )}
                       <button
                         onClick={() => onEditMaterial(item)}
                         className="p-1.5 text-[#888888] hover:text-white hover:bg-[#1F1F21] rounded-lg transition-colors cursor-pointer"

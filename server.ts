@@ -10,13 +10,38 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ limit: "25mb", extended: true }));
+
+// Helper to reliably parse JSON returned by Gemini (removing code blocks if present)
+function cleanAndParseJson(rawText: string | undefined): any {
+  if (!rawText) return {};
+  const cleaned = rawText
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch (err) {
+    // Attempt regex extraction for a JSON object or array
+    const match = cleaned.match(/\{[\s\S]*\}/) || cleaned.match(/\[[\s\S]*\]/);
+    if (match) {
+      try {
+        return JSON.parse(match[0]);
+      } catch (e) {
+        // Fall through
+      }
+    }
+    throw new Error("A resposta gerada pela IA não está em formato JSON válido.");
+  }
+}
 
 // Initialize Google GenAI client lazily or when API key is present
 function getGenAI() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("A chave GEMINI_API_KEY não foi configurada.");
+    throw new Error("A chave GEMINI_API_KEY não foi configurada nos Segredos (Secrets).");
   }
   return new GoogleGenAI({
     apiKey,
@@ -30,13 +55,15 @@ function getGenAI() {
 
 // API Routes
 app.get("/api/health", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 // Endpoint: AI Material Estimator (Calculadora de Insumos da Obra)
 app.post("/api/ai/estimate-mix", async (req, res) => {
+  res.setHeader("Content-Type", "application/json");
   try {
-    const { taskType, dimensions, specs, notes } = req.body;
+    const { taskType, dimensions, specs, notes } = req.body || {};
     const ai = getGenAI();
 
     const prompt = `Você é um engenheiro civil sênior especialista em orçamento e quantificação de materiais/insumos para construção civil no Brasil.
@@ -72,26 +99,31 @@ Responda ESTRITAMENTE em formato JSON com o seguinte schema:
       },
     });
 
-    const resultText = response.text || "{}";
-    const data = JSON.parse(resultText);
-    res.json({ success: true, data });
+    const data = cleanAndParseJson(response.text);
+    return res.json({ success: true, data });
   } catch (err: any) {
     console.error("Erro na estimativa IA:", err);
-    res.status(500).json({ success: false, error: err.message || "Erro ao processar estimativa com IA" });
+    return res.status(500).json({ success: false, error: err.message || "Erro ao processar estimativa com IA" });
   }
 });
 
 // Endpoint: AI Invoice / Receipt Parser (Leitor de Nota Fiscal / Comprovante de Entrega)
 app.post("/api/ai/parse-invoice", async (req, res) => {
+  res.setHeader("Content-Type", "application/json");
   try {
-    const { rawText, imageBase64 } = req.body;
+    const { rawText, imageBase64 } = req.body || {};
     const ai = getGenAI();
 
     let parts: any[] = [];
     if (imageBase64) {
+      let mimeType = "image/jpeg";
+      const mimeMatch = imageBase64.match(/^data:(image\/\w+);base64,/);
+      if (mimeMatch) {
+        mimeType = mimeMatch[1];
+      }
       parts.push({
         inlineData: {
-          mimeType: "image/jpeg",
+          mimeType,
           data: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
         },
       });
@@ -130,26 +162,26 @@ Retorne ESTRITAMENTE em formato JSON com o schema:
       },
     });
 
-    const resultText = response.text || "{}";
-    const data = JSON.parse(resultText);
-    res.json({ success: true, data });
+    const data = cleanAndParseJson(response.text);
+    return res.json({ success: true, data });
   } catch (err: any) {
     console.error("Erro no leitor NF IA:", err);
-    res.status(500).json({ success: false, error: err.message || "Erro ao ler comprovante com IA" });
+    return res.status(500).json({ success: false, error: err.message || "Erro ao ler comprovante com IA" });
   }
 });
 
 // Endpoint: AI Stock Health & Waste Audit (Análise Inteligente de Riscos de Estoque)
 app.post("/api/ai/analyze-stock", async (req, res) => {
+  res.setHeader("Content-Type", "application/json");
   try {
-    const { items, activeWorks } = req.body;
+    const { items, activeWorks } = req.body || {};
     const ai = getGenAI();
 
     const prompt = `Atue como Engenheiro de Gestão de Materiais de Construção Civil.
 Analise a seguinte lista de insumos em estoque e obras ativas:
 
-Estoque Atual: ${JSON.stringify(items)}
-Obras/Canteiros Ativos: ${JSON.stringify(activeWorks)}
+Estoque Atual: ${JSON.stringify(items || [])}
+Obras/Canteiros Ativos: ${JSON.stringify(activeWorks || [])}
 
 Identifique:
 1. Materiais com risco de escassez (abaixo do estoque mínimo ou demanda iminente).
@@ -188,12 +220,11 @@ Responda ESTRITAMENTE em formato JSON com o schema:
       },
     });
 
-    const resultText = response.text || "{}";
-    const data = JSON.parse(resultText);
-    res.json({ success: true, data });
+    const data = cleanAndParseJson(response.text);
+    return res.json({ success: true, data });
   } catch (err: any) {
     console.error("Erro na análise de estoque IA:", err);
-    res.status(500).json({ success: false, error: err.message || "Erro ao analisar estoque com IA" });
+    return res.status(500).json({ success: false, error: err.message || "Erro ao analisar estoque com IA" });
   }
 });
 

@@ -15,7 +15,11 @@ import { MaterialFormModal } from './components/MaterialFormModal';
 import { WorksiteFormModal } from './components/WorksiteFormModal';
 import { EditMovementModal } from './components/EditMovementModal';
 import { AuthModal } from './components/AuthModal';
-import { MaterialItem, StockMovement, WorkSite, User, isWorksiteLockedRole, canManageWorksites, canCreateOrEditMovements } from './types';
+import { CsvImportModal } from './components/CsvImportModal';
+import { GlobalCatalogItemEditModal } from './components/GlobalCatalogItemEditModal';
+import { CatalogAuditHistoryModal } from './components/CatalogAuditHistoryModal';
+import { InitialStockSetupModal } from './components/InitialStockSetupModal';
+import { MaterialItem, StockMovement, WorkSite, User, CatalogoInsumo, EstoqueCanteiro, HistoricoAlteracaoInsumo, isWorksiteLockedRole, canManageWorksites, canCreateOrEditMovements } from './types';
 import { INITIAL_MATERIALS, INITIAL_MOVEMENTS, INITIAL_WORKSITES } from './data/initialData';
 import { INITIAL_USERS } from './data/initialUsers';
 
@@ -29,6 +33,16 @@ export default function App() {
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [worksites, setWorksites] = useState<WorkSite[]>([]);
+  const [catalogoInsumos, setCatalogoInsumos] = useState<CatalogoInsumo[]>([]);
+  const [estoquesPorCanteiro, setEstoquesPorCanteiro] = useState<EstoqueCanteiro[]>([]);
+  const [historicoLogs, setHistoricoLogs] = useState<HistoricoAlteracaoInsumo[]>([]);
+
+  // Modal States for Global Catalog
+  const [isCsvImportOpen, setIsCsvImportOpen] = useState(false);
+  const [isGlobalEditOpen, setIsGlobalEditOpen] = useState(false);
+  const [selectedInsumoForEdit, setSelectedInsumoForEdit] = useState<CatalogoInsumo | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [selectedInsumoForHistory, setSelectedInsumoForHistory] = useState<CatalogoInsumo | null>(null);
 
   // Current logged in user
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -102,13 +116,116 @@ export default function App() {
       setWorksites(fetchedWorksites);
     });
 
+    const unsubscribeCatalog = onSnapshot(collection(db, 'catalogoInsumos'), (snapshot) => {
+      const fetchedCatalog = snapshot.docs.map((docSnap) => docSnap.data() as CatalogoInsumo);
+      setCatalogoInsumos(fetchedCatalog);
+    });
+
+    const unsubscribeStocks = onSnapshot(collection(db, 'estoquesPorCanteiro'), (snapshot) => {
+      const fetchedStocks = snapshot.docs.map((docSnap) => docSnap.data() as EstoqueCanteiro);
+      setEstoquesPorCanteiro(fetchedStocks);
+    });
+
+    const unsubscribeLogs = onSnapshot(collection(db, 'historicoAlteracoesInsumos'), (snapshot) => {
+      const fetchedLogs = snapshot.docs.map((docSnap) => docSnap.data() as HistoricoAlteracaoInsumo);
+      setHistoricoLogs(fetchedLogs);
+    });
+
     return () => {
       unsubscribeUsers();
       unsubscribeMaterials();
       unsubscribeMovements();
       unsubscribeWorksites();
+      unsubscribeCatalog();
+      unsubscribeStocks();
+      unsubscribeLogs();
     };
   }, []);
+
+  // Unified materials combining Global Catalog + Canteiro Specific Stocks
+  const unifiedMaterials: MaterialItem[] = React.useMemo(() => {
+    if (catalogoInsumos.length === 0) {
+      return materials;
+    }
+
+    const stockMap = new Map<string, EstoqueCanteiro>();
+    estoquesPorCanteiro.forEach((st) => {
+      stockMap.set(st.id, st);
+      stockMap.set(`${st.canteiroId}_${st.insumoId}`, st);
+    });
+
+    return catalogoInsumos.map((insumo) => {
+      let stockForCanteiro: EstoqueCanteiro | undefined = undefined;
+
+      if (selectedWorksiteId && selectedWorksiteId !== 'ALL') {
+        stockForCanteiro = stockMap.get(`${selectedWorksiteId}_${insumo.id}`);
+      }
+
+      let qty = 0;
+      let minQty = 10;
+      let locationStr = 'Não configurado';
+
+      if (selectedWorksiteId === 'ALL') {
+        const canteiroStocks = estoquesPorCanteiro.filter((st) => st.insumoId === insumo.id);
+        qty = canteiroStocks.reduce((sum, s) => sum + (s.estoqueAtual || 0), 0);
+        locationStr = canteiroStocks.length > 0 ? `${canteiroStocks.length} canteiro(s)` : 'Visão Global';
+      } else if (stockForCanteiro) {
+        qty = stockForCanteiro.estoqueAtual || 0;
+        minQty = stockForCanteiro.estoqueMinimo !== undefined ? stockForCanteiro.estoqueMinimo : 10;
+        locationStr = stockForCanteiro.localArmazenamento || 'Almoxarifado Principal';
+      }
+
+      return {
+        id: insumo.id,
+        code: insumo.codigoExterno || insumo.id,
+        name: insumo.nome,
+        category: insumo.categoria,
+        quantity: qty,
+        minQuantity: minQty,
+        unit: insumo.unidade || 'un',
+        avgUnitPrice: insumo.precoUnitario || 0,
+        location: locationStr,
+        supplier: insumo.subcategoria || '',
+        lastUpdated: insumo.atualizadoEm || new Date().toISOString().slice(0, 10),
+        notes: insumo.observacoes,
+        paginaFonte: insumo.paginaFonte,
+        detalhesAdicionais: insumo.detalhesAdicionais,
+        ativo: insumo.ativo,
+      };
+    });
+  }, [catalogoInsumos, estoquesPorCanteiro, selectedWorksiteId, materials]);
+
+  // Handle Global Edit Material Save
+  const handleSaveGlobalInsumo = async (updatedInsumo: CatalogoInsumo) => {
+    try {
+      const insumoRef = doc(db, 'catalogoInsumos', updatedInsumo.id);
+      const cleanData = sanitizeForFirestore(updatedInsumo);
+      assertNoUndefined(cleanData);
+      await setDoc(insumoRef, cleanData);
+
+      // Record Audit Log in historicoAlteracoesInsumos
+      const logId = `log-${Date.now()}`;
+      const logObj: HistoricoAlteracaoInsumo = {
+        id: logId,
+        insumoId: updatedInsumo.id,
+        insumoCodigoExterno: updatedInsumo.codigoExterno,
+        usuarioId: currentUser?.id || 'sys',
+        usuarioNome: currentUser?.name || 'Administrador',
+        dataHora: new Date().toISOString(),
+        tipoAlteracao: 'EDICAO_GLOBAL',
+        campoAlterado: 'Insumo Editado Globalmente',
+        informacaoNova: `${updatedInsumo.nome} | R$ ${updatedInsumo.precoUnitario} | ${updatedInsumo.unidade}`,
+      };
+      const cleanLog = sanitizeForFirestore(logObj);
+      assertNoUndefined(cleanLog);
+      await setDoc(doc(db, 'historicoAlteracoesInsumos', logId), cleanLog);
+
+      console.log(`[Firestore] Insumo ${updatedInsumo.id} atualizado no Catálogo Global com histórico.`);
+    } catch (err) {
+      console.error('Erro ao salvar insumo global:', err);
+      throw err;
+    }
+  };
 
   // Manual trigger to load demo data (Administrator only)
   const handleSeedDemoData = async () => {
@@ -643,7 +760,7 @@ export default function App() {
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {activeTab === 'materials' && (
             <MaterialsView
-              materials={materials}
+              materials={unifiedMaterials}
               worksites={worksites}
               movements={movements}
               currentUser={currentUser}
@@ -654,11 +771,27 @@ export default function App() {
                 setIsMaterialFormOpen(true);
               }}
               onEditMaterial={(mat) => {
-                setMaterialToEdit(mat);
-                setIsMaterialFormOpen(true);
+                const foundInsumo = catalogoInsumos.find((i) => i.id === mat.id || i.codigoExterno === mat.code);
+                if (foundInsumo) {
+                  setSelectedInsumoForEdit(foundInsumo);
+                  setIsGlobalEditOpen(true);
+                } else {
+                  setMaterialToEdit(mat);
+                  setIsMaterialFormOpen(true);
+                }
               }}
               onDeleteMaterial={handleDeleteMaterial}
               onOpenQuickMovement={handleOpenQuickMovement}
+              onOpenImportCsv={() => setIsCsvImportOpen(true)}
+              onOpenHistoryInsumo={(mat) => {
+                const foundInsumo = catalogoInsumos.find((i) => i.id === mat.id || i.codigoExterno === mat.code);
+                if (foundInsumo) {
+                  setSelectedInsumoForHistory(foundInsumo);
+                  setIsHistoryModalOpen(true);
+                } else {
+                  alert('Histórico disponível para insumos do Catálogo Global.');
+                }
+              }}
             />
           )}
 
@@ -784,6 +917,34 @@ export default function App() {
         worksiteToEdit={worksiteToEdit}
         onSaveWorksite={handleSaveWorksite}
         onDeleteWorksite={handleDeleteWorksite}
+      />
+
+      {/* CSV Global Catalog Import Modal */}
+      <CsvImportModal
+        isOpen={isCsvImportOpen}
+        onClose={() => setIsCsvImportOpen(false)}
+        currentUser={currentUser}
+        onImportSuccess={() => {
+          setIsCsvImportOpen(false);
+          alert('Importação do Catálogo Global concluída com sucesso!');
+        }}
+      />
+
+      {/* Edit Global Catalog Item Modal */}
+      <GlobalCatalogItemEditModal
+        isOpen={isGlobalEditOpen}
+        onClose={() => setIsGlobalEditOpen(false)}
+        insumo={selectedInsumoForEdit}
+        currentUser={currentUser}
+        onSaveInsumo={handleSaveGlobalInsumo}
+      />
+
+      {/* Audit History Modal */}
+      <CatalogAuditHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        insumo={selectedInsumoForHistory}
+        historyLogs={historicoLogs}
       />
 
       {/* Auth / Login Modal */}
