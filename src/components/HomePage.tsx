@@ -30,6 +30,7 @@ import {
 import { User, MaterialItem, StockMovement, WorkSite, filterMaterialsByWorksite, filterMovementsByWorksite } from '../types';
 import { UserProfileModal } from './UserProfileModal';
 import { UserSettingsModal } from './UserSettingsModal';
+import { DateTimePanel } from './DateTimePanel';
 
 interface HomePageProps {
   onNavigate: (tab: 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users') => void;
@@ -124,8 +125,13 @@ export const HomePage: React.FC<HomePageProps> = ({
         <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16 z-10" />
         <div className="absolute bottom-0 left-1/3 w-48 h-48 bg-emerald-600/10 rounded-full blur-2xl pointer-events-none z-10" />
 
-        <div className="relative z-20 p-5 sm:p-6 lg:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
+        <div className="relative z-20 p-5 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-3.5 max-w-2xl">
+            {/* Real-time DateTimePanel in America/Sao_Paulo timezone */}
+            <div>
+              <DateTimePanel />
+            </div>
+
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold tracking-wide backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>Hogar Empreendimentos • Painel de Controle Integrado</span>
