@@ -20,7 +20,6 @@ import {
   Trash2
 } from 'lucide-react';
 import { User, UserRole } from '../types';
-import { DateTimePanel } from './DateTimePanel';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -544,13 +543,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Dark Vignette Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/40 pointer-events-none" />
 
-        {/* Real-time DateTimePanel - Upper-Left 32px offset (~sm:top-8 sm:left-8) */}
-        <div className="absolute top-4 left-4 sm:top-8 sm:left-8 z-30 pointer-events-auto">
-          <DateTimePanel />
-        </div>
-
         {/* Content Container: Original Crisp Image on Left/Center (md+), Small Login Card on Right */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center md:justify-between gap-6 md:gap-8 min-h-full py-4 pt-20 sm:pt-4">
+        <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center md:justify-between gap-6 md:gap-8 min-h-full py-4">
           
           {/* Crisp Original Image in Foreground */}
           <div className="hidden md:flex flex-1 items-center justify-center max-h-[92vh] p-2">

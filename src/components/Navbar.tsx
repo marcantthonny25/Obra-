@@ -33,6 +33,7 @@ import { MaterialItem, User, WorkSite, canManageUsers, canCreateOrEditMovements,
 import { useTheme } from '../context/ThemeContext';
 import { UserProfileModal } from './UserProfileModal';
 import { UserSettingsModal } from './UserSettingsModal';
+import { DateTimePanel } from './DateTimePanel';
 
 interface NavbarProps {
   activeTab: 'home' | 'materials' | 'movements' | 'worksites' | 'ai' | 'analytics' | 'users';
@@ -185,6 +186,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             </h1>
             <p className="text-[11px] text-[#888888] hidden sm:block">Gestão de Insumos e Obras</p>
           </div>
+        </div>
+
+        {/* Center: Real-time Date and Time */}
+        <div className="flex items-center justify-center mx-auto px-2">
+          <DateTimePanel />
         </div>
 
         {/* Right side: Worksite Selector & User Profile Menu */}
