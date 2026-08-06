@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Lock, CheckCircle2, Loader2 } from 'lucide-react';
-import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite, User, isWorksiteLockedRole, canCreateOrEditMovements } from '../types';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { X, ArrowDownRight, ArrowUpRight, RefreshCw, RotateCcw, AlertCircle, Lock, CheckCircle2, Loader2, Search, ChevronDown, Check } from 'lucide-react';
+import { MaterialItem, MovementType, StockMovement, WorkPhase, WorkSite, User, CatalogoInsumo, isWorksiteLockedRole, canCreateOrEditMovements } from '../types';
 import { sanitizeForFirestore } from '../lib/firebase';
 
 interface QuickMovementModalProps {
   isOpen: boolean;
   onClose: () => void;
   materials: MaterialItem[];
+  catalogoInsumos?: CatalogoInsumo[];
   worksites: WorkSite[];
   preSelectedMaterialId?: string;
   onAddMovement: (movement: Omit<StockMovement, 'id' | 'date'>, updatedUnitPrice?: number) => Promise<void> | void;
@@ -31,6 +32,7 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
   isOpen,
   onClose,
   materials,
+  catalogoInsumos,
   worksites,
   preSelectedMaterialId,
   onAddMovement,
@@ -40,7 +42,11 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
 }) => {
   const isLocked = currentUser ? isWorksiteLockedRole(currentUser.role) : false;
 
-  const [materialId, setMaterialId] = useState<string>(preSelectedMaterialId || (materials[0]?.id || ''));
+  const [materialId, setMaterialId] = useState<string>(preSelectedMaterialId || '');
+  const [insumoSearchTerm, setInsumoSearchTerm] = useState<string>('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const [type, setType] = useState<MovementType>('SAIDA');
   const [quantity, setQuantity] = useState<string>('');
   const [unitPrice, setUnitPrice] = useState<string>('');
@@ -53,6 +59,90 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  // Combine materials and catalogoInsumos into a single robust list of all available insumos
+  const allAvailableMaterials = useMemo(() => {
+    const list: MaterialItem[] = [...materials];
+    const existingIds = new Set(list.map((m) => m.id));
+    const existingCodes = new Set(list.map((m) => m.code));
+
+    if (catalogoInsumos && catalogoInsumos.length > 0) {
+      for (const insumo of catalogoInsumos) {
+        const id = insumo.id;
+        const code = insumo.codigoExterno || insumo.id;
+        if (!existingIds.has(id) && !existingCodes.has(code)) {
+          list.push({
+            id,
+            code,
+            name: insumo.nome,
+            category: insumo.categoria || 'Geral',
+            quantity: 0,
+            minQuantity: 10,
+            unit: insumo.unidade || 'un',
+            avgUnitPrice: insumo.precoEstimado || insumo.precoUnitario || 0,
+            location: 'Catálogo Global',
+            supplier: insumo.subcategoria || '',
+            lastUpdated: insumo.atualizadoEm || new Date().toISOString().slice(0, 10),
+            notes: insumo.observacoes,
+          });
+        }
+      }
+    }
+    return list;
+  }, [materials, catalogoInsumos]);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Sync initial or pre-selected material when modal opens or available materials update
+  useEffect(() => {
+    if (isOpen) {
+      if (preSelectedMaterialId) {
+        setMaterialId(preSelectedMaterialId);
+        const match = allAvailableMaterials.find((m) => m.id === preSelectedMaterialId);
+        if (match) {
+          setInsumoSearchTerm(`${match.code} - ${match.name}`);
+        }
+      } else if (materialId) {
+        const match = allAvailableMaterials.find((m) => m.id === materialId);
+        if (match && !insumoSearchTerm) {
+          setInsumoSearchTerm(`${match.code} - ${match.name}`);
+        }
+      } else if (allAvailableMaterials.length > 0) {
+        const first = allAvailableMaterials[0];
+        setMaterialId(first.id);
+        setInsumoSearchTerm(`${first.code} - ${first.name}`);
+      }
+    }
+  }, [isOpen, preSelectedMaterialId, allAvailableMaterials]);
+
+  const selectedMaterial = useMemo(
+    () => allAvailableMaterials.find((m) => m.id === materialId),
+    [allAvailableMaterials, materialId]
+  );
+
+  // Filter insumos based on search term (searches by name, code, or category)
+  const filteredInsumos = useMemo(() => {
+    if (!insumoSearchTerm.trim()) {
+      return allAvailableMaterials.slice(0, 60);
+    }
+    const term = insumoSearchTerm.toLowerCase().trim();
+    const matches = allAvailableMaterials.filter(
+      (m) =>
+        m.name.toLowerCase().includes(term) ||
+        m.code.toLowerCase().includes(term) ||
+        (m.category && m.category.toLowerCase().includes(term))
+    );
+    return matches.slice(0, 60);
+  }, [allAvailableMaterials, insumoSearchTerm]);
 
   // Auto-set initial worksite
   useEffect(() => {
@@ -76,8 +166,6 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
       setResponsible(currentUser?.name || defaultResponsible || '');
     }
   }, [isOpen, selectedWorksiteId, currentUser, worksites]);
-
-  const selectedMaterial = materials.find((m) => m.id === materialId);
 
   // Sync default detail when material changes
   React.useEffect(() => {
@@ -293,26 +381,99 @@ export const QuickMovementModal: React.FC<QuickMovementModalProps> = ({
             </div>
           </div>
 
-          {/* Material Selection */}
-          <div>
-            <label className="block text-xs font-semibold text-[#888888] mb-1">Insumo</label>
-            <select
-              value={materialId}
-              onChange={(e) => setMaterialId(e.target.value)}
-              className="w-full bg-[#151517] border border-[#1F1F21] rounded-lg p-2.5 text-white focus:ring-2 focus:ring-[#F2A30F] focus:border-[#F2A30F] outline-none"
-            >
-              {materials.map((m) => (
-                <option key={m.id} value={m.id} className="bg-[#151517] text-white">
-                  {m.code} - {m.name} (Saldo: {m.quantity} {m.unit})
-                </option>
-              ))}
-            </select>
+          {/* Material Selection (Searchable Combobox) */}
+          <div className="relative" ref={dropdownRef}>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-[#888888]">Insumo (Catálogo Global)</label>
+              <span className="text-[10px] text-[#A0A0A0] font-medium bg-[#1F1F21] px-2 py-0.5 rounded-full">
+                {allAvailableMaterials.length.toLocaleString('pt-BR')} insumos no catálogo
+              </span>
+            </div>
+
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Pesquise por nome (ex: Aço, Cimento) ou código..."
+                value={insumoSearchTerm}
+                onFocus={() => setIsDropdownOpen(true)}
+                onClick={() => setIsDropdownOpen(true)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setInsumoSearchTerm(val);
+                  setIsDropdownOpen(true);
+                  if (selectedMaterial && val !== `${selectedMaterial.code} - ${selectedMaterial.name}`) {
+                    setMaterialId('');
+                  }
+                }}
+                className="w-full bg-[#151517] border border-[#1F1F21] rounded-lg py-2.5 pl-9 pr-10 text-white placeholder-[#666666] focus:ring-2 focus:ring-[#F2A30F] focus:border-[#F2A30F] outline-none text-sm transition-all"
+              />
+              <Search className="w-4 h-4 text-[#888888] absolute left-3 top-3 pointer-events-none" />
+              {insumoSearchTerm ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInsumoSearchTerm('');
+                    setMaterialId('');
+                    setIsDropdownOpen(true);
+                  }}
+                  className="absolute right-3 top-2.5 text-[#888888] hover:text-white p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              ) : (
+                <ChevronDown className="w-4 h-4 text-[#888888] absolute right-3 top-3 pointer-events-none" />
+              )}
+            </div>
+
+            {/* Dropdown List */}
+            {isDropdownOpen && (
+              <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-[#151517] border border-[#2B2B2E] rounded-xl shadow-2xl divide-y divide-[#1F1F21]">
+                {filteredInsumos.length > 0 ? (
+                  filteredInsumos.map((item) => {
+                    const isSelected = item.id === materialId;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setMaterialId(item.id);
+                          setInsumoSearchTerm(`${item.code} - ${item.name}`);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left p-2.5 hover:bg-[#222226] transition-colors flex items-center justify-between ${
+                          isSelected ? 'bg-[#F2A30F]/15 border-l-4 border-[#F2A30F]' : ''
+                        }`}
+                      >
+                        <div className="pr-2 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[11px] font-bold text-[#F2A30F] bg-[#F2A30F]/10 px-1.5 py-0.5 rounded shrink-0">
+                              {item.code}
+                            </span>
+                            <span className="text-xs font-semibold text-white truncate">{item.name}</span>
+                          </div>
+                          <div className="text-[10px] text-[#888888] mt-0.5 flex items-center gap-3">
+                            <span>Cat: {item.category || 'Geral'}</span>
+                            <span>Un: {item.unit}</span>
+                          </div>
+                        </div>
+                        {isSelected && <Check className="w-4 h-4 text-[#F2A30F] shrink-0" />}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="p-4 text-center text-xs text-[#888888]">
+                    Nenhum insumo encontrado para "<span className="text-white">{insumoSearchTerm}</span>".
+                  </div>
+                )}
+              </div>
+            )}
+
             {selectedMaterial && (
-              <div className="mt-1 flex items-center justify-between text-[11px] text-[#888888]">
-                <span>Local: {selectedMaterial.location}</span>
+              <div className="mt-1.5 flex items-center justify-between text-[11px] text-[#888888] bg-[#18181B] border border-[#26262B] px-3 py-2 rounded-lg">
+                <span>Local: <strong className="text-white">{selectedMaterial.location}</strong></span>
                 <span>
                   Saldo Atual:{' '}
-                  <strong className={selectedMaterial.quantity <= selectedMaterial.minQuantity ? 'text-[#F2A30F]' : 'text-white'}>
+                  <strong className={selectedMaterial.quantity <= selectedMaterial.minQuantity ? 'text-[#F2A30F]' : 'text-emerald-400'}>
                     {selectedMaterial.quantity} {selectedMaterial.unit}
                   </strong>
                 </span>

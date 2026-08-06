@@ -393,17 +393,33 @@ export default function App() {
       await runTransaction(db, async (transaction) => {
         // 1. Read Material doc inside transaction to ensure fresh & atomic data
         const matSnap = await transaction.get(materialRef);
-        if (!matSnap.exists()) {
-          throw new Error(`Insumo (ID: ${movementData.materialId}) não encontrado no banco de dados.`);
-        }
+        let matData: Partial<MaterialItem> = {};
+        let currentQty = 0;
 
-        const matData = matSnap.data() as MaterialItem;
-        const currentQty = matData.quantity || 0;
+        if (matSnap.exists()) {
+          matData = matSnap.data() as MaterialItem;
+          currentQty = matData.quantity || 0;
+        } else {
+          // If the item comes directly from catalogoInsumos and doesn't exist in materials collection yet
+          const catalogMatch = catalogoInsumos.find(c => c.id === movementData.materialId || c.codigoExterno === movementData.materialId);
+          matData = {
+            id: movementData.materialId,
+            code: catalogMatch?.codigoExterno || movementData.materialId,
+            name: movementData.materialName || catalogMatch?.nome || 'Insumo Sem Nome',
+            category: catalogMatch?.categoria || 'Geral',
+            quantity: 0,
+            minQuantity: 10,
+            unit: movementData.unit || catalogMatch?.unidade || 'un',
+            avgUnitPrice: catalogMatch?.precoEstimado || catalogMatch?.precoUnitario || movementData.unitPrice || 0,
+            location: 'Catálogo Global',
+            lastUpdated: new Date().toISOString().slice(0, 10),
+          };
+        }
 
         // 2. Prevent negative stock balance on exit/adjustment movements
         if ((movementData.type === 'SAIDA' || movementData.type === 'AJUSTE') && movementData.quantity > currentQty) {
           throw new Error(
-            `Saldo insuficiente em estoque no Firestore! Saldo atual: ${currentQty} ${matData.unit || ''}. Quantidade solicitada: ${movementData.quantity}.`
+            `Saldo insuficiente em estoque no Firestore! Saldo atual: ${currentQty} ${movementData.unit || matData.unit || ''}. Quantidade solicitada: ${movementData.quantity}.`
           );
         }
 
@@ -415,7 +431,7 @@ export default function App() {
           newQty -= movementData.quantity;
         }
 
-        const finalPrice = updatedUnitPrice !== undefined ? updatedUnitPrice : (matData.avgUnitPrice || 0);
+        const finalPrice = updatedUnitPrice !== undefined ? updatedUnitPrice : (movementData.unitPrice || matData.avgUnitPrice || 0);
 
         // 4. Read Worksite doc inside transaction if applicable
         let worksiteSnap = null;
@@ -425,6 +441,7 @@ export default function App() {
 
         // 5. Commit atomic writes
         const matUpdate = sanitizeForFirestore({
+          ...matData,
           quantity: Math.max(0, newQty),
           avgUnitPrice: finalPrice,
           lastUpdated: new Date().toISOString().slice(0, 10),
@@ -432,7 +449,11 @@ export default function App() {
         assertNoUndefined(matUpdate);
 
         transaction.set(movementRef, newMovement);
-        transaction.update(materialRef, matUpdate);
+        if (matSnap.exists()) {
+          transaction.update(materialRef, matUpdate);
+        } else {
+          transaction.set(materialRef, matUpdate);
+        }
 
         if (worksiteRef && worksiteSnap && worksiteSnap.exists()) {
           const currentSpent = worksiteSnap.data().totalSpentMaterials || 0;
@@ -911,7 +932,8 @@ export default function App() {
       <QuickMovementModal
         isOpen={isQuickMovementOpen}
         onClose={() => setIsQuickMovementOpen(false)}
-        materials={materials}
+        materials={unifiedMaterials}
+        catalogoInsumos={catalogoInsumos}
         worksites={worksites}
         preSelectedMaterialId={preSelectedMaterialId}
         onAddMovement={handleAddMovement}
