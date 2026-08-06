@@ -108,33 +108,59 @@ export const HomePage: React.FC<HomePageProps> = ({
   return (
     <div className="w-full min-h-[calc(100vh-80px)] bg-[#0B0B0C] text-[#E0E0E0] select-none py-4 sm:py-5 px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6 max-w-[1500px] mx-auto">
       
-      {/* 1. Compact Header Hero Welcome Banner (~30% smaller height) */}
-      <section id="dashboard-hero-header" className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0F1D16] via-[#0F0F11] to-[#0A120D] border border-emerald-500/20 p-4 sm:p-5 shadow-xl">
-        {/* Subtle decorative background elements */}
-        <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
-        <div className="absolute bottom-0 left-1/3 w-48 h-48 bg-emerald-600/5 rounded-full blur-2xl pointer-events-none" />
+      {/* 1. Header Hero Welcome Banner with hogar-home-hero.jpg integration */}
+      <section id="dashboard-hero-header" className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0F1D16] via-[#0F0F11] to-[#0A120D] border border-emerald-500/20 shadow-xl">
+        {/* Background image layer with gradient overlay for perfect readability */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/hogar-home-hero.jpg" 
+            alt="Hogar Empreendimentos Hero" 
+            className="w-full h-full object-cover object-center opacity-25 mix-blend-luminosity scale-105 transition-transform duration-700"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0B0B0C] via-[#0B0B0C]/85 to-transparent z-10" />
+        </div>
 
-        <div className="relative z-10 space-y-1.5 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-semibold tracking-wide">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Hogar Empreendimentos • Painel de Controle Integrado</span>
+        {/* Subtle decorative background elements */}
+        <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16 z-10" />
+        <div className="absolute bottom-0 left-1/3 w-48 h-48 bg-emerald-600/10 rounded-full blur-2xl pointer-events-none z-10" />
+
+        <div className="relative z-20 p-5 sm:p-6 lg:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold tracking-wide backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Hogar Empreendimentos • Painel de Controle Integrado</span>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-snug">
+              {currentUser ? (
+                <>
+                  Bem-vindo(a) de volta, <span className="text-emerald-400">{currentUser.name}</span>!
+                </>
+              ) : (
+                <>
+                  Plataforma Inteligente de <span className="text-emerald-400">Gestão de Obras & Estoque</span>
+                </>
+              )}
+            </h1>
+
+            <p className="text-xs sm:text-sm text-[#B0B0B0] leading-relaxed max-w-xl">
+              Monitore materiais em tempo real, controle saídas para canteiros de obras e mantenha a rastreabilidade total do almoxarifado corporativo.
+            </p>
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
-            {currentUser ? (
-              <>
-                Bem-vindo(a) de volta, <span className="text-emerald-400">{currentUser.name}</span>!
-              </>
-            ) : (
-              <>
-                Plataforma Inteligente de <span className="text-emerald-400">Gestão de Obras & Estoque</span>
-              </>
-            )}
-          </h1>
-
-          <p className="text-xs sm:text-sm text-[#9E9E9E] leading-relaxed">
-            Monitore materiais em tempo real, controle saídas para canteiros de obras e mantenha a rastreabilidade total do almoxarifado corporativo.
-          </p>
+          <div className="hidden sm:block shrink-0 relative group">
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-700 opacity-30 blur group-hover:opacity-60 transition duration-500" />
+            <div className="relative w-48 h-28 sm:w-56 sm:h-32 rounded-xl overflow-hidden border border-emerald-500/30 shadow-2xl">
+              <img 
+                src="/hogar-home-hero.jpg" 
+                alt="Hogar Empreendimentos" 
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2.5">
+                <span className="text-[11px] font-bold text-white tracking-wider uppercase drop-shadow">Hogar Empreendimentos</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -424,7 +450,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             {criticalStockCount > 0 ? (
               <div className="space-y-2.5">
-                {materials
+                {filteredMaterials
                   .filter((m) => m.quantity <= m.minQuantity)
                   .slice(0, 3)
                   .map((m) => (
