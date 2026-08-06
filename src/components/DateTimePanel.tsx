@@ -48,26 +48,26 @@ export const DateTimePanel: React.FC<DateTimePanelProps> = ({ className = '' }) 
 
   return (
     <div
-      className={`inline-flex flex-col bg-[#08120C]/85 backdrop-blur-md border border-[#73B993]/35 rounded-2xl p-3 sm:p-4 shadow-xl shadow-black/60 transition-all text-white select-none ${className}`}
+      className={`inline-flex flex-col items-center justify-center bg-[#08120C]/80 backdrop-blur-md border border-[#73B993]/30 rounded-2xl px-4 py-2.5 shadow-lg shadow-black/50 transition-all text-white select-none ${className}`}
       id="datetime-panel"
     >
       {/* Time Header with #73B993 Details */}
       <div className="flex items-center gap-2">
-        <span className="relative flex h-2.5 w-2.5 shrink-0">
+        <span className="relative flex h-2 w-2 shrink-0">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#73B993] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#73B993]"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#73B993]"></span>
         </span>
         <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#73B993] shrink-0" />
-        <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight font-mono text-white drop-shadow">
+        <span className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight font-mono text-white drop-shadow">
           {timeStr}
         </span>
-        <span className="text-[10px] font-bold text-[#73B993] bg-[#73B993]/15 border border-[#73B993]/30 px-1.5 py-0.5 rounded-md uppercase tracking-wider ml-1">
+        <span className="text-[10px] font-bold text-[#73B993] bg-[#73B993]/15 border border-[#73B993]/30 px-1.5 py-0.5 rounded-md uppercase tracking-wider ml-0.5">
           BRT
         </span>
       </div>
 
       {/* Date Subtitle */}
-      <div className="text-[11px] sm:text-xs font-semibold text-white/90 flex items-center gap-1.5 mt-2 pt-2 border-t border-[#73B993]/20">
+      <div className="text-[11px] sm:text-xs font-medium text-white/90 flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[#73B993]/20 w-full justify-center">
         <Calendar className="w-3.5 h-3.5 text-[#73B993] shrink-0" />
         <span className="truncate">{dateStr}</span>
       </div>
