@@ -29,17 +29,19 @@ import {
 interface CsvImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  existingCatalog: CatalogoInsumo[];
+  existingCatalog?: CatalogoInsumo[];
   currentUser: User | null;
-  onImportCompleted: () => void;
+  onImportCompleted?: () => void;
+  onImportSuccess?: () => void;
 }
 
 export const CsvImportModal: React.FC<CsvImportModalProps> = ({
   isOpen,
   onClose,
-  existingCatalog,
+  existingCatalog = [],
   currentUser,
   onImportCompleted,
+  onImportSuccess,
 }) => {
   const [step, setStep] = useState<'upload' | 'preview' | 'processing' | 'report'>('upload');
   const [file, setFile] = useState<File | null>(null);
@@ -155,7 +157,8 @@ export const CsvImportModal: React.FC<CsvImportModalProps> = ({
 
       setFinalReport(report);
       setStep('report');
-      onImportCompleted();
+      const notifySuccess = onImportCompleted || onImportSuccess;
+      if (notifySuccess) notifySuccess();
     } catch (err: any) {
       console.error('Erro durante importação CSV:', err);
       setErrorMessage(`Falha durante a gravação em lotes: ${err.message}`);

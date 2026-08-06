@@ -81,8 +81,8 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
     }
   }, [selectedWorksiteId]);
 
-  // First filter materials by selected worksite
-  const worksiteFilteredMaterials = filterMaterialsByWorksite(materials, selectedWorksite, worksites, movements);
+  // The Global Catalog applies to all worksites; stock for the selected worksite is already contextualized in unifiedMaterials.
+  const worksiteFilteredMaterials = materials;
 
   // Filter logic for search, category, and status
   const filteredMaterials = worksiteFilteredMaterials.filter((item) => {

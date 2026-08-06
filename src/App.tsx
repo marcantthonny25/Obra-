@@ -19,6 +19,7 @@ import { CsvImportModal } from './components/CsvImportModal';
 import { GlobalCatalogItemEditModal } from './components/GlobalCatalogItemEditModal';
 import { CatalogAuditHistoryModal } from './components/CatalogAuditHistoryModal';
 import { InitialStockSetupModal } from './components/InitialStockSetupModal';
+import { parseCsvText, buildImportPreviewSummary, executeBatchImport } from './lib/csvCatalogManager';
 import { MaterialItem, StockMovement, WorkSite, User, CatalogoInsumo, EstoqueCanteiro, HistoricoAlteracaoInsumo, isWorksiteLockedRole, canManageWorksites, canCreateOrEditMovements } from './types';
 import { INITIAL_MATERIALS, INITIAL_MOVEMENTS, INITIAL_WORKSITES } from './data/initialData';
 import { INITIAL_USERS } from './data/initialUsers';
@@ -116,9 +117,38 @@ export default function App() {
       setWorksites(fetchedWorksites);
     });
 
-    const unsubscribeCatalog = onSnapshot(collection(db, 'catalogoInsumos'), (snapshot) => {
+    let isSeedingCatalog = false;
+
+    const unsubscribeCatalog = onSnapshot(collection(db, 'catalogoInsumos'), async (snapshot) => {
       const fetchedCatalog = snapshot.docs.map((docSnap) => docSnap.data() as CatalogoInsumo);
       setCatalogoInsumos(fetchedCatalog);
+
+      if (snapshot.empty && !isSeedingCatalog) {
+        isSeedingCatalog = true;
+        console.log('[AutoSeed Catalog] Coleção catalogoInsumos vazia no Firestore. Iniciando importação do CSV oficial...');
+        try {
+          const res = await fetch('/importacao_sugerida_insumos_hogar.csv');
+          if (res.ok) {
+            const csvText = await res.text();
+            const rows = parseCsvText(csvText);
+            const summary = buildImportPreviewSummary(rows, []);
+            await executeBatchImport(
+              summary,
+              { updateDuplicates: true },
+              {
+                id: 'admin_sys',
+                name: 'Administrador Sistema',
+                role: 'Administrador',
+                email: 'admin@hogar.com.br',
+                createdAt: new Date().toISOString(),
+              }
+            );
+            console.log(`[AutoSeed Catalog] Concluído! ${rows.length} insumos semeados na coleção catalogoInsumos do Firestore.`);
+          }
+        } catch (err) {
+          console.error('[AutoSeed Catalog] Erro ao semear catálogo:', err);
+        }
+      }
     });
 
     const unsubscribeStocks = onSnapshot(collection(db, 'estoquesPorCanteiro'), (snapshot) => {
@@ -923,10 +953,10 @@ export default function App() {
       <CsvImportModal
         isOpen={isCsvImportOpen}
         onClose={() => setIsCsvImportOpen(false)}
+        existingCatalog={catalogoInsumos}
         currentUser={currentUser}
-        onImportSuccess={() => {
+        onImportCompleted={() => {
           setIsCsvImportOpen(false);
-          alert('Importação do Catálogo Global concluída com sucesso!');
         }}
       />
 
